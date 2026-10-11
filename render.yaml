@@ -1,3 +1,5 @@
+# Render Blueprint: New > Blueprint > pick this repo. It creates the web service and asks
+# you for every value marked "sync: false". Nothing else to configure.
 services:
   - type: web
     name: popupplug
@@ -24,11 +26,7 @@ services:
         sync: false
       - key: ADMIN_NOTIFY_EMAILS               # where new-vendor alerts go (can be the same as ADMIN_EMAIL)
         sync: false
-      - key: EMAIL_HOST
-        value: smtp-relay.brevo.com
-      - key: EMAIL_HOST_USER
-        sync: false
-      - key: EMAIL_HOST_PASSWORD
+      - key: BREVO_API_KEY                     # Brevo > SMTP & API > API Keys (NOT the SMTP key: Render free blocks SMTP)
         sync: false
       - key: DEFAULT_FROM_EMAIL
         sync: false                            # e.g. PopUp Plug <hello@popupplug.com.ng> (a sender verified in Brevo)

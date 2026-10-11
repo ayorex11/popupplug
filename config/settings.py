@@ -219,14 +219,20 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 MAX_EVENTS_PER_DAY = int(getenv("MAX_EVENTS_PER_DAY", "5"))
 
 # ---------------------------------------------------------------------------
-# Email (Brevo SMTP, or any SMTP). With no EMAIL_HOST, emails print to the console.
+# Email. Three modes, picked automatically:
+#   BREVO_API_KEY set  -> Brevo HTTPS API (use this on Render's free plan: it blocks SMTP ports)
+#   EMAIL_HOST set     -> plain SMTP (any provider, works anywhere SMTP isn't blocked)
+#   neither            -> emails are printed to the console (local development)
 # ---------------------------------------------------------------------------
-EMAIL_HOST = getenv("EMAIL_HOST", "")
-if EMAIL_HOST:
+BREVO_API_KEY = getenv("BREVO_API_KEY")
+EMAIL_HOST = getenv("EMAIL_HOST")
+if BREVO_API_KEY:
+    EMAIL_BACKEND = "core.brevo_backend.BrevoEmailBackend"
+elif EMAIL_HOST:
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
     EMAIL_PORT = int(getenv("EMAIL_PORT", "587"))
-    EMAIL_HOST_USER = getenv("EMAIL_HOST_USER", "")
-    EMAIL_HOST_PASSWORD = getenv("EMAIL_HOST_PASSWORD", "")
+    EMAIL_HOST_USER = getenv("EMAIL_HOST_USER")
+    EMAIL_HOST_PASSWORD = getenv("EMAIL_HOST_PASSWORD")
     EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)
     EMAIL_TIMEOUT = 10
 else:

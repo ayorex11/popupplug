@@ -47,3 +47,26 @@ class CoreTests(TestCase):
         with mock.patch.dict(os.environ, {"ADMIN_EMAIL": "", "ADMIN_PASSWORD": ""}):
             call_command("bootstrap", stdout=StringIO())
             call_command("bootstrap", stdout=StringIO())
+
+
+class BrevoBackendTests(TestCase):
+    @override_settings(BREVO_API_KEY="k", DEFAULT_FROM_EMAIL="PopUp Plug <hello@popupplug.com.ng>")
+    def test_posts_to_brevo_api(self):
+        from django.core.mail import EmailMultiAlternatives
+        from .brevo_backend import BrevoEmailBackend
+        m = EmailMultiAlternatives("Hi", "plain", "PopUp Plug <hello@popupplug.com.ng>", ["a@example.com"])
+        m.attach_alternative("<b>html</b>", "text/html")
+        with mock.patch("core.brevo_backend.requests.post", return_value=mock.Mock(status_code=201, text="")) as post:
+            self.assertEqual(BrevoEmailBackend().send_messages([m]), 1)
+        body = post.call_args.kwargs["json"]
+        self.assertEqual(body["sender"], {"email": "hello@popupplug.com.ng", "name": "PopUp Plug"})
+        self.assertEqual((body["to"], body["htmlContent"]), ([{"email": "a@example.com"}], "<b>html</b>"))
+        self.assertEqual(post.call_args.kwargs["headers"]["api-key"], "k")
+
+    @override_settings(BREVO_API_KEY="k")
+    def test_api_error_raises(self):
+        from django.core.mail import EmailMessage
+        from .brevo_backend import BrevoEmailBackend
+        with mock.patch("core.brevo_backend.requests.post", return_value=mock.Mock(status_code=401, text="bad key")):
+            with self.assertRaises(RuntimeError):
+                BrevoEmailBackend().send_messages([EmailMessage("x", "y", "a@b.com", ["c@d.com"])])
