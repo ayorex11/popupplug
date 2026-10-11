@@ -1,0 +1,8 @@
+{% extends "desk/base.html" %}
+{% block title %}Vendors &middot; Desk{% endblock %}
+{% block content %}
+<h1 style="margin-top:28px">Vendors</h1>
+{% include "desk/_subtabs.html" %}
+<form class="search" style="margin:0 0 18px;max-width:420px" method="get"><input type="hidden" name="tab" value="{{ subtab }}"><input type="search" name="q" value="{{ q }}" placeholder="Search name, email, @instagram"><button class="btn small" type="submit">Search</button></form>
+{% for v in vendors %}{% include "desk/_vendor_item.html" %}{% empty %}<div class="empty"><p class="muted" style="margin:0">No vendors here.</p></div>{% endfor %}
+{% endblock %}

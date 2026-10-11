@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block ticker %}{% endblock %}
+{% block desk_nav %}
+<div class="desk-bar"><div class="wrap">
+  <a href="{% url 'desk:home' %}" class="{% if tab == 'home' %}active{% endif %}">Overview</a>
+  <a href="{% url 'desk:vendors' %}?tab=pending" class="{% if tab == 'vendors' %}active{% endif %}">Vendors{% if staff_pending_vendors %}<span class="count">{{ staff_pending_vendors }}</span>{% endif %}</a>
+  <a href="{% url 'desk:events' %}?tab=pending" class="{% if tab == 'events' %}active{% endif %}">Events{% if staff_pending_events %}<span class="count">{{ staff_pending_events }}</span>{% endif %}</a>
+  <a href="{% url 'desk:social' %}" class="{% if tab == 'social' %}active{% endif %}">Instagram</a>
+  <a href="{% url 'admin:index' %}">Django admin</a>
+</div></div>
+{% endblock %}

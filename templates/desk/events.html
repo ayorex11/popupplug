@@ -1,0 +1,8 @@
+{% extends "desk/base.html" %}
+{% block title %}Events &middot; Desk{% endblock %}
+{% block content %}
+<h1 style="margin-top:28px">Events</h1>
+{% include "desk/_subtabs.html" %}
+<form class="search" style="margin:0 0 18px;max-width:420px" method="get"><input type="hidden" name="tab" value="{{ subtab }}"><input type="search" name="q" value="{{ q }}" placeholder="Search title or vendor"><button class="btn small" type="submit">Search</button></form>
+{% for e in events %}{% include "desk/_event_item.html" %}{% empty %}<div class="empty"><p class="muted" style="margin:0">No events here.</p></div>{% endfor %}
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Browse pop-up events in Lagos &middot; {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<h1 style="margin-top:28px">Browse pop-ups</h1>
+
+<form class="filters" method="get">
+  <div class="field"><label>Search</label><input type="search" name="q" value="{{ q }}" placeholder="Keyword or vendor"></div>
+  <div class="field">
+    <label>When</label>
+    <select name="when">
+      <option value="upcoming" {% if when == "upcoming" %}selected{% endif %}>Upcoming</option>
+      <option value="today" {% if when == "today" %}selected{% endif %}>Today</option>
+      <option value="weekend" {% if when == "weekend" %}selected{% endif %}>This weekend</option>
+      <option value="week" {% if when == "week" %}selected{% endif %}>Next 7 days</option>
+      <option value="past" {% if when == "past" %}selected{% endif %}>Past events</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>Area</label>
+    <select name="area"><option value="">All of Lagos</option>
+      {% for a in areas %}<option value="{{ a.slug }}" {% if area == a.slug %}selected{% endif %}>{{ a.name }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label>Category</label>
+    <select name="category"><option value="">All categories</option>
+      {% for c in categories %}<option value="{{ c.slug }}" {% if category == c.slug %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+    </select>
+  </div>
+  <div>
+    <label><input type="checkbox" name="free" value="1" {% if free %}checked{% endif %}>Free only</label>
+    <button class="btn block" type="submit">Filter</button>
+  </div>
+</form>
+
+{% if page.object_list %}
+  <div class="grid">{% for event in page %}{% include "events/_card.html" %}{% endfor %}</div>
+  {% if page.paginator.num_pages > 1 %}
+  <div class="pager">
+    {% if page.has_previous %}<a class="btn ghost small" href="?{% if querystring %}{{ querystring }}&amp;{% endif %}page={{ page.previous_page_number }}">&larr; Prev</a>{% endif %}
+    <span class="muted small">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+    {% if page.has_next %}<a class="btn ghost small" href="?{% if querystring %}{{ querystring }}&amp;{% endif %}page={{ page.next_page_number }}">Next &rarr;</a>{% endif %}
+  </div>
+  {% endif %}
+{% else %}
+  <div class="empty"><h2>Nothing matches yet</h2><p>Try a different area or date, or <a href="{% url 'events:list' %}">clear filters</a>.</p></div>
+{% endif %}
+{% endblock %}

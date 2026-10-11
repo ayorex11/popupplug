@@ -1,0 +1,52 @@
+services:
+  - type: web
+    name: popupplug
+    runtime: python
+    plan: free
+    region: frankfurt   # closest Render region to Lagos with a free plan; change if you like
+    buildCommand: ./build.sh
+    # One worker + threads: the page cache is in-memory, so extra workers would each hold their own copy.
+    startCommand: gunicorn config.wsgi:application --workers 1 --threads 4 --timeout 30 --bind 0.0.0.0:$PORT
+    healthCheckPath: /healthz
+    autoDeployTrigger: commit
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: SECRET_KEY
+        generateValue: true
+      - key: SITE_URL
+        value: https://popupplug.com.ng        # change to your onrender.com URL until the domain is connected
+      - key: DATABASE_URL                      # Supabase "Session pooler" connection string
+        sync: false
+      - key: ADMIN_EMAIL                       # your login for /desk and /admin
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ADMIN_NOTIFY_EMAILS               # where new-vendor alerts go (can be the same as ADMIN_EMAIL)
+        sync: false
+      - key: EMAIL_HOST
+        value: smtp-relay.brevo.com
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        sync: false                            # e.g. PopUp Plug <hello@popupplug.com.ng> (a sender verified in Brevo)
+      - key: AWS_STORAGE_BUCKET_NAME           # Backblaze B2 bucket (public)
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_S3_ENDPOINT_URL               # e.g. https://s3.us-west-004.backblazeb2.com
+        sync: false
+      - key: AWS_S3_REGION_NAME                # e.g. us-west-004
+        sync: false
+      - key: INSTAGRAM_ENABLED
+        value: "true"                         # turn on once the cards look right in /desk/instagram/
+      - key: INSTAGRAM_AUTOPOST
+        value: "false"
+      - key: INSTAGRAM_USER_ID
+        sync: false
+      - key: INSTAGRAM_ACCESS_TOKEN
+        sync: false

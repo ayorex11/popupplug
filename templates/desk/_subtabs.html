@@ -1,0 +1,1 @@
+<div class="tabs">{% for key, label, n in subtabs %}<a class="chip {% if subtab == key %}active{% endif %}" href="?tab={{ key }}">{{ label }}<span class="count">{{ n }}</span></a>{% endfor %}</div>

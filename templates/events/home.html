@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <span class="eyebrow">Lagos pop-up guide</span>
+  <h1>What's popping up in <em>Lagos?</em></h1>
+  <p class="lead">Find backyard grills, flea markets, thrift drops and bake days across Island and Mainland. Free to browse, free for vendors to list.</p>
+  <form class="search" action="{% url 'events:list' %}" method="get" role="search">
+    <label class="sr" for="q">Search</label>
+    <input id="q" type="search" name="q" placeholder="Search suya, thrift, cakes, Lekki..." autocomplete="off">
+    <button class="btn" type="submit">Search</button>
+  </form>
+  <div class="chips">
+    <a class="chip active" href="{% url 'events:list' %}?when=today">Today</a>
+    <a class="chip" href="{% url 'events:list' %}?when=weekend">This weekend</a>
+    <a class="chip" href="{% url 'events:list' %}?free=1">Free entry</a>
+    {% for c in categories|slice:":5" %}<a class="chip" href="{% url 'events:list' %}?category={{ c.slug }}">{{ c.name }}</a>{% endfor %}
+  </div>
+</section>
+
+{% if this_weekend %}
+<section class="section">
+  <div class="section-head"><h2>This weekend in Lagos</h2><a href="{% url 'events:list' %}?when=weekend">See all</a></div>
+  <div class="grid">{% for event in this_weekend %}{% include "events/_card.html" %}{% endfor %}</div>
+</section>
+{% endif %}
+
+{% if upcoming %}
+<section class="section">
+  <div class="section-head"><h2>Coming up</h2><a href="{% url 'events:list' %}">See all</a></div>
+  <div class="grid">{% for event in upcoming %}{% include "events/_card.html" %}{% endfor %}</div>
+</section>
+{% endif %}
+
+{% if not this_weekend and not upcoming %}
+<div class="empty">
+  <h2>No pop-ups listed yet</h2>
+  <p class="muted">Be the first. Listing is free.</p>
+  <a class="btn" href="{% url 'vendors:signup' %}">+ Post a pop-up</a>
+</div>
+{% endif %}
+
+<section class="section">
+  <div class="section-head"><h2>Browse by area</h2></div>
+  <div class="chips left">{% for a in areas %}<a class="chip" href="{% url 'events:list' %}?area={{ a.slug }}">{{ a.name }}</a>{% endfor %}</div>
+</section>
+{% endblock %}
+
+{% block after_main %}
+<section class="band">
+  <div class="wrap"><div class="inner">
+    <div>
+      <span class="eyebrow" style="background:var(--red-tint)">Calling Lagos vendors</span>
+      <h2>Hosting a pop-up or selling this weekend?</h2>
+      <p class="muted" style="margin:0">List your event in under 2 minutes. No fees.</p>
+      <ul><li>&#10003; Free listing</li><li>&#10003; Shoppers reach you on WhatsApp</li><li>&#10003; Shareable event link</li></ul>
+    </div>
+    <a class="btn" href="{% url 'vendors:signup' %}">+ Post a pop-up (it's free)</a>
+  </div></div>
+</section>
+{% endblock %}

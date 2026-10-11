@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}List your pop-up for free &middot; {{ SITE_NAME }}{% endblock %}
+{% block ticker %}{% endblock %}
+{% block content %}
+<h1 style="margin-top:32px">List your pop-up, free</h1>
+<p class="muted">Create a vendor account to post pop-up sales and events in Lagos. We review new vendors before their first event goes live.</p>
+<form class="panel" method="post" novalidate>
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+  {% for field in form %}
+    <div class="field">
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }}
+      {% if field.help_text %}<div class="help">{{ field.help_text|safe }}</div>{% endif %}
+      {{ field.errors }}
+    </div>
+  {% endfor %}
+  <button class="btn block" type="submit">Create account</button>
+  <p class="muted small" style="margin:14px 0 0">Already have an account? <a href="{% url 'login' %}"><strong>Log in</strong></a></p>
+</form>
+{% endblock %}

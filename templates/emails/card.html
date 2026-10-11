@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<body style="margin:0;padding:0;background:#FFF8EF;font-family:Arial,Helvetica,sans-serif;color:#1B1B1B;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FFF8EF;padding:24px 12px;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#FFFFFF;border:2px solid #1B1B1B;border-radius:14px;">
+        <tr><td style="background:#FFC93C;padding:14px 22px;border-bottom:2px solid #1B1B1B;border-radius:12px 12px 0 0;font-weight:800;font-size:18px;letter-spacing:-0.3px;">
+          {{ SITE_NAME }}
+        </td></tr>
+        <tr><td style="padding:24px 22px 8px 22px;">
+          <h1 style="margin:0 0 10px 0;font-size:22px;line-height:1.25;">{{ heading }}</h1>
+          <p style="margin:0 0 18px 0;font-size:15px;line-height:1.5;color:#5C5750;">{{ intro }}</p>
+          {% if rows %}
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FAF1E4;border-radius:10px;">
+            {% for label, value in rows %}
+            <tr>
+              <td style="padding:9px 14px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#5C5750;width:34%;vertical-align:top;">{{ label }}</td>
+              <td style="padding:9px 14px;font-size:14px;line-height:1.4;word-break:break-word;">{{ value }}</td>
+            </tr>
+            {% endfor %}
+          </table>
+          {% endif %}
+        </td></tr>
+        {% if button_url %}
+        <tr><td style="padding:12px 22px 24px 22px;">
+          <a href="{{ button_url }}" style="display:inline-block;background:#FF5A36;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:15px;padding:13px 22px;border:2px solid #1B1B1B;border-radius:8px;">{{ button_label }}</a>
+        </td></tr>
+        {% endif %}
+        {% if footer %}
+        <tr><td style="padding:0 22px 22px 22px;font-size:12px;color:#9E978E;">{{ footer }}</td></tr>
+        {% endif %}
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

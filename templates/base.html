@@ -1,0 +1,61 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ SITE_NAME }}: pop-ups in Lagos{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}Find pop-up sales, markets, bake days and food pop-ups happening in Lagos. Free to browse, free for vendors to list.{% endblock %}">
+  <meta name="theme-color" content="#FFC93C">
+  <link rel="icon" href="{% static 'img/favicon.ico' %}" sizes="any">
+  <link rel="icon" type="image/png" sizes="192x192" href="{% static 'img/logo-192.png' %}">
+  <link rel="apple-touch-icon" href="{% static 'img/logo-180.png' %}">
+  <meta property="og:site_name" content="{{ SITE_NAME }}">
+  <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+  <meta property="og:title" content="{% block og_title %}{{ SITE_NAME }}: pop-ups in Lagos{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}Find pop-up sales, markets and food pop-ups happening in Lagos.{% endblock %}">
+  {% block og_image %}<meta property="og:image" content="{{ SITE_URL }}{% static 'img/logo-512.png' %}">{% endblock %}
+  <meta name="twitter:card" content="summary_large_image">
+  {% block head_extra %}{% endblock %}
+  <link rel="preload" href="{% static 'fonts/bricolage-grotesque-latin-800-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="{% url 'events:home' %}"><img src="{% static 'img/logo-96.png' %}" alt="" width="40" height="40"><span>PopUp Plug<small>Lagos pop-up guide</small></span></a>
+    <nav class="nav" aria-label="Main">
+      <a href="{% url 'events:list' %}" class="hide-sm">Browse</a>
+      {% if user.is_authenticated %}
+        {% if user.is_staff %}<a href="{% url 'desk:home' %}">Desk{% if staff_pending_total %}<span class="count">{{ staff_pending_total }}</span>{% endif %}</a>{% endif %}
+        {% if user.vendor %}<a href="{% url 'vendors:dashboard' %}" class="hide-sm">My events</a>
+        <a class="btn small" href="{% url 'events:create' %}">+ Post</a>{% endif %}
+        <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="link-btn" type="submit">Log out</button></form>
+      {% else %}
+        <a href="{% url 'login' %}">Log in</a>
+        <a class="btn small" href="{% url 'vendors:signup' %}">+ Post a pop-up</a>
+      {% endif %}
+    </nav>
+  </div>
+</header>
+{% block ticker %}<div class="ticker" aria-hidden="true"><div>{% for _ in "xx" %}<span>What's popping in Lagos</span><span>&bull;</span><span>Free for vendors to list</span><span>&bull;</span><span>Island and Mainland</span><span>&bull;</span><span>Find your next pop-up this weekend</span><span>&bull;</span>{% endfor %}</div></div>{% endblock %}
+
+{% block desk_nav %}{% endblock %}
+<main class="wrap">
+  {% if messages %}<ul class="messages">{% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}</ul>{% endif %}
+  {% block content %}{% endblock %}
+</main>
+{% block after_main %}{% endblock %}
+
+<footer>
+  <div class="wrap">
+    <div><strong style="font-family:var(--head);font-size:18px;color:var(--ink)">PopUp Plug</strong><br>Pop-ups, markets and food drops in Lagos.</div>
+    <div>
+      <a href="{% url 'events:list' %}">Browse</a> &nbsp;&middot;&nbsp; <a href="{% url 'vendors:signup' %}">List your pop-up (free)</a>
+      {% if INSTAGRAM_HANDLE %}&nbsp;&middot;&nbsp; <a href="https://instagram.com/{{ INSTAGRAM_HANDLE }}" rel="noopener" target="_blank">Instagram</a>{% endif %}
+    </div>
+  </div>
+</footer>
+{% if not user.is_authenticated or user.vendor %}<a class="fab" href="{% url 'events:create' %}" aria-label="Post a pop-up">+</a>{% endif %}
+<script src="{% static 'js/app.js' %}" defer></script>
+</body>
+</html>

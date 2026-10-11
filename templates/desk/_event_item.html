@@ -1,0 +1,25 @@
+{% load pp_tags %}
+<article class="item has-thumb">
+  <a class="thumb" href="{{ e.get_absolute_url }}" target="_blank"><img src="{{ e.cover_image.url }}" alt="" loading="lazy"></a>
+  <div>
+    <span class="pill {{ e.status }}">{{ e.get_status_display }}</span>
+    {% if not e.vendor.verified %}<span class="pill pending">Vendor not verified</span>{% endif %}
+    <h3 style="margin-top:6px">{{ e.title }}</h3>
+    <div class="meta"><span>{{ e|when_range }}</span><span>{{ e.venue }}, {{ e.area.name }}</span><span>{{ e.category.name }}</span><span>{% if e.is_free_entry %}Free entry{% else %}{{ e.entry_note|default:"Paid" }}{% endif %}</span></div>
+    <div class="meta"><span>By <a href="{% url 'vendors:profile' e.vendor.slug %}" target="_blank"><strong>{{ e.vendor.name }}</strong></a></span>
+      <span><a href="{{ e.vendor.whatsapp_url }}" target="_blank" rel="noopener">WhatsApp</a></span>
+      {% if e.vendor.instagram %}<span><a href="{{ e.vendor.instagram_url }}" target="_blank" rel="noopener">Instagram</a></span>{% endif %}</div>
+    <p class="small" style="white-space:pre-line;max-height:5.5em;overflow:hidden;margin:0 0 6px">{{ e.description|truncatechars:260 }}</p>
+    {% if e.review_note and e.status == "rejected" %}<div class="notice bad">Reason sent to vendor: {{ e.review_note }}</div>{% endif %}
+    <div class="row-actions">
+      <form method="post" action="{% url 'desk:event_action' e.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+        {% if e.status != "published" %}<button class="btn good small" name="action" value="approve">Approve and publish</button>{% else %}<button class="btn ghost small" name="action" value="unpublish">Unpublish</button>{% endif %}
+      </form>
+      {% if e.status != "rejected" %}
+      <form method="post" action="{% url 'desk:event_action' e.pk %}" class="reject-form">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <input type="text" name="note" maxlength="200" placeholder="Reason (sent to vendor)" aria-label="Rejection reason">
+        <button class="btn danger small" name="action" value="reject">Reject</button>
+      </form>{% endif %}
+    </div>
+  </div>
+</article>

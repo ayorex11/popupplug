@@ -1,0 +1,19 @@
+{% extends "desk/base.html" %}
+{% block title %}Desk &middot; {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<h1 style="margin-top:28px">Desk</h1>
+<div class="stats">
+  <a class="stat {% if pending_vendor_count %}hot{% endif %}" href="{% url 'desk:vendors' %}?tab=pending"><small>Vendors to approve</small><strong>{{ pending_vendor_count }}</strong></a>
+  <a class="stat {% if pending_event_count %}hot{% endif %}" href="{% url 'desk:events' %}?tab=pending"><small>Events to approve</small><strong>{{ pending_event_count }}</strong></a>
+  <a class="stat" href="{% url 'desk:events' %}?tab=published"><small>Live or upcoming events</small><strong>{{ live_count }}</strong></a>
+  <a class="stat" href="{% url 'desk:social' %}"><small>Instagram posts ready</small><strong>{{ social_ready }}</strong></a>
+</div>
+<div class="cols">
+  <section><div class="section-head"><h2>New vendors</h2><a href="{% url 'desk:vendors' %}?tab=pending">All pending</a></div>
+    {% for v in pending_vendors %}{% include "desk/_vendor_item.html" %}{% empty %}<div class="empty" style="margin:0"><p class="muted" style="margin:0">Nobody waiting. ({{ vendor_count }} vendor{{ vendor_count|pluralize }} total.)</p></div>{% endfor %}
+  </section>
+  <section><div class="section-head"><h2>New events</h2><a href="{% url 'desk:events' %}?tab=pending">All pending</a></div>
+    {% for e in pending_events %}{% include "desk/_event_item.html" %}{% empty %}<div class="empty" style="margin:0"><p class="muted" style="margin:0">Nothing waiting.</p></div>{% endfor %}
+  </section>
+</div>
+{% endblock %}

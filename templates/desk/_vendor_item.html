@@ -1,0 +1,27 @@
+<article class="item">
+  <div>
+    <span class="pill {{ v.status }}">{{ v.status|title }}</span>
+    <h3 style="margin-top:6px">{{ v.name }}</h3>
+    <div class="meta">
+      <span>{{ v.user.email }}</span>
+      <span>Joined {{ v.created_at|date:"j M, g:i A" }}</span>
+      {% if v.event_total is not None %}<span>{{ v.event_total }} event{{ v.event_total|pluralize }}{% if v.event_pending %} ({{ v.event_pending }} pending){% endif %}</span>{% endif %}
+    </div>
+    <div class="links" style="margin-bottom:8px">
+      <a href="{{ v.whatsapp_url }}" target="_blank" rel="noopener">WhatsApp {{ v.phone }}</a>
+      {% if v.instagram %}<a href="{{ v.instagram_url }}" target="_blank" rel="noopener">Instagram @{{ v.instagram }}</a>{% endif %}
+      {% if v.twitter %}<a href="{{ v.twitter_url }}" target="_blank" rel="noopener">X @{{ v.twitter }}</a>{% endif %}
+    </div>
+    {% if v.bio %}<p class="muted small" style="margin:0 0 6px">{{ v.bio }}</p>{% endif %}
+    <div class="row-actions">
+      <form method="post" action="{% url 'desk:vendor_action' v.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+        {% if v.status == "pending" %}<button class="btn good small" name="action" value="approve">Approve vendor</button>
+        {% elif v.status == "verified" %}<button class="btn ghost small" name="action" value="unverify">Remove verification</button>
+        {% endif %}
+        {% if v.status == "suspended" %}<button class="btn small" name="action" value="reactivate">Reactivate</button>
+        {% else %}<button class="btn danger small" name="action" value="suspend" onclick="return confirm('Suspend {{ v.name|escapejs }}? Their live events are hidden.')">Suspend</button>{% endif %}
+      </form>
+      {% if v.event_pending %}<a class="btn ghost small" href="{% url 'desk:events' %}?tab=pending&q={{ v.name|urlencode }}">Review their events</a>{% endif %}
+    </div>
+  </div>
+</article>

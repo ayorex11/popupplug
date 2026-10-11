@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load humanize pp_tags %}
+{% block title %}{{ event.title }} &middot; {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}{{ event.title }} in {{ event.area.name }}, Lagos on {{ event.start_at|date:"D j M" }}. By {{ event.vendor.name }}.{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block og_title %}{{ event.title }}{% endblock %}
+{% block og_description %}{{ event.start_at|date:"D, j M · g:i A" }} · {{ event.area.name }}, Lagos · by {{ event.vendor.name }}{% endblock %}
+{% block og_image %}<meta property="og:image" content="{% if event.cover_image.url|slice:':4' == 'http' %}{{ event.cover_image.url }}{% else %}{{ SITE_URL }}{{ event.cover_image.url }}{% endif %}">
+<meta property="og:url" content="{{ SITE_URL }}{{ event.get_absolute_url }}">{% endblock %}
+
+{% block content %}
+{% if not event.is_published %}
+  <ul class="messages"><li class="warning">This event is <strong>{{ event.get_status_display|lower }}</strong> and only visible to you.{% if event.review_note %} Note: {{ event.review_note }}{% endif %}</li></ul>
+{% endif %}
+
+<div class="detail">
+  <div class="poster"><img src="{{ event.cover_image.url }}" alt="{{ event.title }}" width="1000" height="1000"></div>
+
+  <div>
+    <div class="when">{{ event.start_at|date:"l, j F Y" }}</div>
+    <h1>{{ event.title }}</h1>
+    <p class="muted">
+      <span class="pill {{ event.category|tint }}">{{ event.category.name }}</span>
+      {% if event.is_free_entry %}<span class="pill matcha">Free entry</span>{% endif %}
+      &nbsp;by <a href="{% url 'vendors:profile' event.vendor.slug %}">{{ event.vendor.name }}</a>
+      {% if event.vendor.verified %}<span class="pill verified" title="Verified vendor">Verified</span>{% endif %}
+    </p>
+
+    <ul class="facts">
+      <li><strong>When</strong>{{ event.start_at|date:"D j M, g:i A" }} &ndash; {{ event.end_at|date:"D j M, g:i A" }}</li>
+      <li><strong>Where</strong>{{ event.venue }}, {{ event.area.name }}, Lagos</li>
+      {% if event.entry_note %}<li><strong>Entry</strong>{{ event.entry_note }}</li>{% endif %}
+    </ul>
+
+    <div class="actions">
+      {% if event.is_published %}
+      <form method="post" action="{% url 'events:interested' event.slug %}" data-interested>
+        {% csrf_token %}
+        <button class="btn {% if interested %}on{% endif %}" type="submit">{% if interested %}&#10003; Interested{% else %}I'm interested{% endif %} &middot; {{ event.interested_count }}</button>
+      </form>
+      {% endif %}
+      <button class="btn ghost" type="button" data-copy="{{ SITE_URL }}{{ event.get_absolute_url }}">Copy link</button>
+      <a class="btn ghost" href="https://wa.me/?text={{ event.title|urlencode }}%20{{ SITE_URL|urlencode }}{{ event.get_absolute_url|urlencode }}" rel="noopener" target="_blank">Share on WhatsApp</a>
+    </div>
+
+    <h2 style="font-size:22px">About this pop-up</h2>
+    <p class="desc">{{ event.description }}</p>
+
+    <h3 style="margin-top:20px">Contact the vendor</h3>
+    <p class="links">
+      <a href="{{ event.vendor.whatsapp_url }}" rel="noopener" target="_blank">WhatsApp</a>
+      {% if event.vendor.instagram %} <a href="{{ event.vendor.instagram_url }}" rel="noopener nofollow" target="_blank">Instagram</a>{% endif %}
+      {% if event.vendor.twitter %} <a href="{{ event.vendor.twitter_url }}" rel="noopener nofollow" target="_blank">Twitter/X</a>{% endif %}
+    </p>
+
+    {% if can_manage %}
+      <div class="actions">
+        <a class="btn ghost small" href="{% url 'events:edit' event.slug %}">Edit event</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+{% if more %}
+<section class="section">
+  <h2>More in {{ event.area.name }}</h2>
+  <div class="grid">{% for event in more %}{% include "events/_card.html" %}{% endfor %}</div>
+</section>
+{% endif %}
+{% endblock %}
