@@ -1,9 +1,9 @@
 from django.contrib import messages
 from django.contrib.auth import login
-from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
+from core.decorators import flag_invalid, login_required
 from events.models import Event
 
 from .forms import VendorProfileForm, VendorSignupForm
@@ -19,6 +19,7 @@ def signup(request):
         login(request, user)
         messages.success(request, "Welcome! Your vendor account is ready. Post your first pop-up.")
         return redirect("vendors:dashboard")
+    flag_invalid(request, form)
     return render(request, "vendors/signup.html", {"form": form})
 
 
@@ -40,6 +41,7 @@ def edit_profile(request):
         form.save()
         messages.success(request, "Profile updated.")
         return redirect("vendors:dashboard")
+    flag_invalid(request, form)
     return render(request, "vendors/profile_form.html", {"form": form})
 
 

@@ -41,7 +41,6 @@
 
 {% block desk_nav %}{% endblock %}
 <main class="wrap">
-  {% if messages %}<ul class="messages">{% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}</ul>{% endif %}
   {% block content %}{% endblock %}
 </main>
 {% block after_main %}{% endblock %}
@@ -56,6 +55,8 @@
   </div>
 </footer>
 {% if not user.is_authenticated or user.vendor %}<a class="fab" href="{% url 'events:create' %}" aria-label="Post a pop-up">+</a>{% endif %}
+<div class="toasts" id="toasts" role="status" aria-live="polite">{% for m in messages %}<div class="toast {{ m.tags }}"><span>{{ m }}</span></div>{% endfor %}</div>
+<dialog id="confirm-dialog" class="confirm"><form method="dialog"><p id="confirm-text"></p><div class="row-actions"><button class="btn ghost small" value="cancel">Cancel</button><button class="btn danger small" value="ok" id="confirm-ok">Confirm</button></div></form></dialog>
 <script src="{% static 'js/app.js' %}" defer></script>
 </body>
 </html>

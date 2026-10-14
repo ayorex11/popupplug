@@ -10,7 +10,7 @@
 
 {% block content %}
 {% if not event.is_published %}
-  <ul class="messages"><li class="warning">This event is <strong>{{ event.get_status_display|lower }}</strong> and only visible to you.{% if event.review_note %} Note: {{ event.review_note }}{% endif %}</li></ul>
+  <div class="notice">This event is <strong>{{ event.get_status_display|lower }}</strong> and only visible to you.{% if event.review_note %} Note: {{ event.review_note }}{% endif %}</div>
 {% endif %}
 
 <div class="detail">

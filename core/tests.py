@@ -70,3 +70,24 @@ class BrevoBackendTests(TestCase):
         with mock.patch("core.brevo_backend.requests.post", return_value=mock.Mock(status_code=401, text="bad key")):
             with self.assertRaises(RuntimeError):
                 BrevoEmailBackend().send_messages([EmailMessage("x", "y", "a@b.com", ["c@d.com"])])
+
+class NotificationTests(TestCase):
+    def test_login_required_explains_redirect(self):
+        r = self.client.get("/vendors/dashboard/", follow=True)
+        self.assertContains(r, "Please log in to continue.")
+        self.assertContains(r, 'class="toast warning"')
+
+    def test_login_and_logout_toast(self):
+        from django.contrib.auth import get_user_model
+        get_user_model().objects.create_user("a@b.com", "a@b.com", "pw-12345-x")
+        r = self.client.post("/login/", {"username": "a@b.com", "password": "pw-12345-x"}, follow=True)
+        self.assertContains(r, "You&#x27;re logged in.")
+        r = self.client.post("/logout/", follow=True)
+        self.assertContains(r, "logged out")
+
+    def test_no_native_dialogs_in_templates(self):
+        import pathlib
+        for f in pathlib.Path("templates").rglob("*.html"):
+            t = f.read_text()
+            self.assertNotIn("confirm(", t, f)
+            self.assertNotIn("alert(", t, f)

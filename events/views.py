@@ -1,7 +1,6 @@
 from datetime import timedelta
 
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
 from django.db.models import F, Q
@@ -10,6 +9,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from core.decorators import flag_invalid, login_required
 from core.notifications import notify_event_pending
 from social import services as social_services
 from vendors.models import Vendor
@@ -154,6 +154,7 @@ def toggle_interested(request, slug):
     event.refresh_from_db(fields=["interested_count"])
     if request.headers.get("x-requested-with") == "XMLHttpRequest":
         return JsonResponse({"interested": state, "count": event.interested_count})
+    messages.success(request, "Saved. We'll show you're interested." if state else "Removed from your interests.")
     return redirect(event.get_absolute_url())
 
 
@@ -180,6 +181,7 @@ def event_create(request):
             notify_event_pending(event)
             messages.success(request, "Submitted! We review new vendors' first events, usually within a day.")
         return redirect("vendors:dashboard")
+    flag_invalid(request, form)
     return render(request, "events/event_form.html", {"form": form, "editing": False})
 
 
@@ -200,6 +202,7 @@ def event_edit(request, slug):
             notify_event_pending(event, edited=True)
         messages.success(request, "Event updated.")
         return redirect("vendors:dashboard")
+    flag_invalid(request, form)
     return render(request, "events/event_form.html", {"form": form, "editing": True, "event": event})
 
 

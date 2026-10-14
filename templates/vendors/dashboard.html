@@ -26,7 +26,7 @@
     <div class="row-actions">
       <a class="btn dark small" href="{% url 'events:edit' event.slug %}">Edit</a>
       <a class="btn ghost small" href="{{ event.get_absolute_url }}">View</a>
-      <form method="post" action="{% url 'events:delete' event.slug %}" onsubmit="return confirm('Delete this event?')">{% csrf_token %}<button class="btn danger small" type="submit">Delete</button></form>
+      <form method="post" action="{% url 'events:delete' event.slug %}" data-confirm="Delete &quot;{{ event.title|escape }}&quot;? This can't be undone." data-confirm-ok="Delete">{% csrf_token %}<button class="btn danger small" type="submit">Delete</button></form>
     </div>
   </div>
 </article>

@@ -65,10 +65,18 @@ p { margin: 0 0 1em; }
 @keyframes tick { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .ticker div { animation: none; } }
 
-/* messages */
-.messages { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 8px; }
-.messages li { padding: 12px 14px; border: 2px solid var(--ink); border-radius: 10px; background: #fff; font-weight: 700; }
-.messages .success { background: var(--green-tint); } .messages .error { background: var(--red-tint); } .messages .warning { background: #FFF3D1; }
+/* toasts (Django messages + JS notifications) */
+.toasts { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 100; width: min(440px, calc(100% - 24px)); display: grid; gap: 8px; pointer-events: none; }
+.toast { pointer-events: auto; display: flex; gap: 10px; align-items: flex-start; justify-content: space-between; padding: 12px 14px; border: 2px solid var(--ink); border-radius: 10px; background: #fff; box-shadow: 3px 3px 0 var(--ink); font-weight: 700; animation: toast-in .2s ease-out; }
+.toast.success { background: var(--green-tint); } .toast.error { background: var(--red-tint); } .toast.warning { background: #FFF3D1; }
+.toast button { background: none; border: 0; font: inherit; font-size: 18px; line-height: 1; cursor: pointer; color: var(--ink); padding: 0 2px; }
+.toast.out { opacity: 0; transform: translateY(-6px); transition: .2s; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(-8px); } }
+@media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
+/* confirm dialog */
+.confirm { border: 2px solid var(--ink); border-radius: 12px; box-shadow: 5px 5px 0 var(--ink); padding: 20px; max-width: min(400px, calc(100% - 32px)); background: #fff; color: var(--ink); }
+.confirm::backdrop { background: rgba(27,27,27,.55); }
+.confirm p { margin: 0 0 16px; font-weight: 700; }
 
 /* hero */
 .hero { text-align: center; padding: 40px 0 28px; }

@@ -19,7 +19,7 @@
         {% elif v.status == "verified" %}<button class="btn ghost small" name="action" value="unverify">Remove verification</button>
         {% endif %}
         {% if v.status == "suspended" %}<button class="btn small" name="action" value="reactivate">Reactivate</button>
-        {% else %}<button class="btn danger small" name="action" value="suspend" onclick="return confirm('Suspend {{ v.name|escapejs }}? Their live events are hidden.')">Suspend</button>{% endif %}
+        {% else %}<button class="btn danger small" name="action" value="suspend" data-confirm="Suspend {{ v.name|escape }}? Their live events will be hidden." data-confirm-ok="Suspend">Suspend</button>{% endif %}
       </form>
       {% if v.event_pending %}<a class="btn ghost small" href="{% url 'desk:events' %}?tab=pending&q={{ v.name|urlencode }}">Review their events</a>{% endif %}
     </div>
