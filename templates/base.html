@@ -1,20 +1,26 @@
-{% load static %}<!doctype html>
-<html lang="en">
+{% load static pp_tags %}<!doctype html>
+<html lang="en-NG">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}{{ SITE_NAME }}: pop-ups in Lagos{% endblock %}</title>
+  <title>{% block title %}{{ SITE_NAME }}: find pop-up events in Lagos{% endblock %}</title>
   <meta name="description" content="{% block meta_description %}Find pop-up sales, markets, bake days and food pop-ups happening in Lagos. Free to browse, free for vendors to list.{% endblock %}">
+  <link rel="canonical" href="{% block canonical %}{{ CANONICAL_URL }}{% endblock %}">
+  {% block robots %}<meta name="robots" content="index, follow, max-image-preview:large">{% endblock %}
   <meta name="theme-color" content="#FFC93C">
   <link rel="icon" href="{% static 'img/favicon.ico' %}" sizes="any">
   <link rel="icon" type="image/png" sizes="192x192" href="{% static 'img/logo-192.png' %}">
   <link rel="apple-touch-icon" href="{% static 'img/logo-180.png' %}">
   <meta property="og:site_name" content="{{ SITE_NAME }}">
+  <meta property="og:locale" content="en_NG">
+  <meta property="og:url" content="{{ CANONICAL_URL }}">
   <meta property="og:type" content="{% block og_type %}website{% endblock %}">
-  <meta property="og:title" content="{% block og_title %}{{ SITE_NAME }}: pop-ups in Lagos{% endblock %}">
+  <meta property="og:title" content="{% block og_title %}{{ SITE_NAME }}: find pop-up events in Lagos{% endblock %}">
   <meta property="og:description" content="{% block og_description %}Find pop-up sales, markets and food pop-ups happening in Lagos.{% endblock %}">
-  {% block og_image %}<meta property="og:image" content="{{ SITE_URL }}{% static 'img/logo-512.png' %}">{% endblock %}
+  {% block og_image %}<meta property="og:image" content="{{ SITE_URL }}{% static 'img/og-default.png' %}">
+  <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">{% endblock %}
   <meta name="twitter:card" content="summary_large_image">
+  {% block jsonld %}{% endblock %}
   {% block head_extra %}{% endblock %}
   <link rel="preload" href="{% static 'fonts/bricolage-grotesque-latin-800-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{% static 'css/style.css' %}">

@@ -1,5 +1,7 @@
 {% extends "base.html" %}
-{% block title %}{{ vendor.name }} &middot; {{ SITE_NAME }}{% endblock %}
+{% block title %}{{ vendor.name }}: pop-up vendor in Lagos | {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}{% if vendor.bio %}{{ vendor.bio }}{% else %}Pop-up events by {{ vendor.name }} in Lagos.{% endif %} See where {{ vendor.name }} is popping up next on {{ SITE_NAME }}.{% endblock %}
+{% block robots %}{% if upcoming or past %}{{ block.super }}{% else %}<meta name="robots" content="noindex, follow">{% endif %}{% endblock %}
 {% block og_title %}{{ vendor.name }} on {{ SITE_NAME }}{% endblock %}
 {% block og_description %}{% if vendor.bio %}{{ vendor.bio }}{% else %}Pop-up events by {{ vendor.name }} in Lagos.{% endif %}{% endblock %}
 {% block content %}

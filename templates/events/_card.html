@@ -1,7 +1,7 @@
 {% load humanize pp_tags %}
 <article class="card">
   <a class="cover" href="{{ event.get_absolute_url }}" tabindex="-1" aria-hidden="true">
-    <img src="{{ event.cover_image.url }}" alt="" loading="lazy" width="640" height="400">
+    <img src="{{ event.cover_image.url }}" alt="{{ event.title }} pop-up in {{ event.area.name }}, Lagos" loading="lazy" width="640" height="400">
   </a>
   <div class="date-badge"><b>{{ event.start_at|day_abbr }}</b><strong>{{ event.start_at|day_num }}</strong><i>{{ event.start_at|month_abbr }}</i></div>
   {% if event.is_free_entry %}<span class="stamp">Free entry</span>{% endif %}

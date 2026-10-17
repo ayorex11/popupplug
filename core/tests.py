@@ -91,3 +91,74 @@ class NotificationTests(TestCase):
             t = f.read_text()
             self.assertNotIn("confirm(", t, f)
             self.assertNotIn("alert(", t, f)
+
+
+class SeoTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        from datetime import timedelta
+        from django.utils import timezone
+        from events.models import Area, Category, Event
+        from vendors.models import Vendor
+        call_command("seed_lagos", verbosity=0)
+        u = User.objects.create_user("v", "v@example.com", "pw-12345-xyz")
+        cls.vendor = Vendor.objects.create(user=u, name="Ada <Bakes> & Co", phone="08012345678")
+        kw = dict(vendor=cls.vendor, category=Category.objects.first(), area=Area.objects.get(slug="lekki"),
+                  venue="The Hub, Admiralty Way", description="Cakes </script> galore", cover_image="events/x.webp")
+        start = timezone.now() + timedelta(days=3)
+        cls.live = Event.objects.create(title="Live Cake Day", start_at=start, end_at=start + timedelta(hours=5), status="published", **kw)
+        cls.pending = Event.objects.create(title="Secret Pending", start_at=start, end_at=start + timedelta(hours=5), status="pending", **kw)
+
+    def test_robots(self):
+        r = self.client.get("/robots.txt")
+        self.assertEqual(r["Content-Type"].split(";")[0], "text/plain")
+        self.assertContains(r, "Disallow: /desk/")
+        self.assertContains(r, "Sitemap: ")
+        self.assertContains(r, "/sitemap.xml")
+
+    def test_sitemap_lists_only_published(self):
+        r = self.client.get("/sitemap.xml")
+        self.assertEqual(r["Content-Type"].split(";")[0], "application/xml")
+        body = r.content.decode()
+        self.assertIn(self.live.get_absolute_url(), body)
+        self.assertNotIn(self.pending.slug, body)
+        self.assertIn(f"/vendors/{self.vendor.slug}/", body)
+        self.assertNotIn("/desk/", body)
+        import xml.dom.minidom
+        xml.dom.minidom.parseString(r.content)  # well-formed
+
+    def test_event_page_has_canonical_and_valid_jsonld(self):
+        import json, re
+        r = self.client.get(self.live.get_absolute_url() + "?utm_source=x")
+        html = r.content.decode()
+        self.assertIn(f'<link rel="canonical" href="http://localhost:8000{self.live.get_absolute_url()}">', html)
+        m = re.search(r'<script type="application/ld\+json">(.*?)</script>', html, re.S)
+        data = json.loads(m.group(1))
+        self.assertEqual(data["@type"], "Event")
+        self.assertEqual(data["location"]["address"]["addressCountry"], "NG")
+        self.assertTrue(data["isAccessibleForFree"])
+        self.assertNotIn("</script>", m.group(1))  # description with </script> must be escaped
+
+    def test_unpublished_event_not_indexable(self):
+        self.client.force_login(self.vendor.user)
+        r = self.client.get(self.pending.get_absolute_url())
+        self.assertContains(r, 'content="noindex, nofollow"')
+        self.assertNotContains(r, "application/ld+json")
+
+    def test_home_has_site_schema_and_og(self):
+        r = self.client.get("/")
+        self.assertContains(r, '"@type": "WebSite"')
+        self.assertContains(r, "og-default")
+        self.assertContains(r, 'rel="canonical"')
+
+    def test_search_results_noindex_but_list_canonical_is_clean(self):
+        r = self.client.get("/events/?q=cake&area=lekki")
+        self.assertContains(r, 'content="noindex, follow"')
+        self.assertContains(r, 'rel="canonical" href="http://localhost:8000/events/"')
+        r = self.client.get("/events/?area=lekki")
+        self.assertContains(r, 'content="index, follow')
+
+    def test_private_pages_send_noindex_header(self):
+        for path in ("/login/", "/desk/", "/vendors/dashboard/", "/events/new/"):
+            r = self.client.get(path)
+            self.assertEqual(r.get("X-Robots-Tag"), "noindex, nofollow", path)

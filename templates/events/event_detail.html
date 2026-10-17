@@ -1,12 +1,13 @@
 {% extends "base.html" %}
 {% load humanize pp_tags %}
-{% block title %}{{ event.title }} &middot; {{ SITE_NAME }}{% endblock %}
-{% block meta_description %}{{ event.title }} in {{ event.area.name }}, Lagos on {{ event.start_at|date:"D j M" }}. By {{ event.vendor.name }}.{% endblock %}
+{% block title %}{{ event.title|truncatechars:55 }} in {{ event.area.name }}, Lagos | {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}{{ event.title }}: a {{ event.category.name|lower }} pop-up at {{ event.venue }}, {{ event.area.name }}, Lagos on {{ event.start_at|date:"D j M Y" }}{% if event.is_free_entry %}, free entry{% endif %}. By {{ event.vendor.name }}. {{ event.description|truncatechars:90 }}{% endblock %}
+{% block robots %}{% if event.is_published %}{{ block.super }}{% else %}<meta name="robots" content="noindex, nofollow">{% endif %}{% endblock %}
+{% block jsonld %}{% if event.is_published %}{% jsonld "event" event %}{% endif %}{% endblock %}
 {% block og_type %}article{% endblock %}
 {% block og_title %}{{ event.title }}{% endblock %}
 {% block og_description %}{{ event.start_at|date:"D, j M · g:i A" }} · {{ event.area.name }}, Lagos · by {{ event.vendor.name }}{% endblock %}
-{% block og_image %}<meta property="og:image" content="{% if event.cover_image.url|slice:':4' == 'http' %}{{ event.cover_image.url }}{% else %}{{ SITE_URL }}{{ event.cover_image.url }}{% endif %}">
-<meta property="og:url" content="{{ SITE_URL }}{{ event.get_absolute_url }}">{% endblock %}
+{% block og_image %}<meta property="og:image" content="{% if event.cover_image.url|slice:':4' == 'http' %}{{ event.cover_image.url }}{% else %}{{ SITE_URL }}{{ event.cover_image.url }}{% endif %}">{% endblock %}
 
 {% block content %}
 {% if not event.is_published %}
@@ -14,7 +15,7 @@
 {% endif %}
 
 <div class="detail">
-  <div class="poster"><img src="{{ event.cover_image.url }}" alt="{{ event.title }}" width="1000" height="1000"></div>
+  <div class="poster"><img src="{{ event.cover_image.url }}" alt="{{ event.title }} pop-up poster, {{ event.area.name }}, Lagos" width="1000" height="1000"></div>
 
   <div>
     <div class="when">{{ event.start_at|date:"l, j F Y" }}</div>

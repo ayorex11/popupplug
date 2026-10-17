@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% load pp_tags %}
+{% block jsonld %}{% jsonld "site" %}{% endblock %}
 {% block content %}
 <section class="hero">
   <span class="eyebrow">Lagos pop-up guide</span>

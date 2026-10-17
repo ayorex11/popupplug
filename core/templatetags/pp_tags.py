@@ -1,5 +1,8 @@
 from django import template
 from django.utils import timezone
+from django.utils.safestring import mark_safe
+
+from core import seo
 
 register = template.Library()
 
@@ -34,3 +37,15 @@ def tint(obj_or_id):
     """Pick one of four soft pill colours, stable per category."""
     pk = getattr(obj_or_id, "pk", obj_or_id) or 0
     return ("coral", "butter", "matcha", "lilac")[int(pk) % 4]
+
+
+@register.simple_tag
+def jsonld(kind, obj=None):
+    """{% jsonld "site" %}, {% jsonld "event" event %}. Emits a JSON-LD script tag."""
+    if kind == "site":
+        data = seo.site_schema()
+    elif kind == "event":
+        data = seo.event_schema(obj)
+    else:
+        return ""
+    return mark_safe(f'<script type="application/ld+json">{seo.dumps(data)}</script>')
