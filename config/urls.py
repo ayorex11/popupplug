@@ -13,6 +13,7 @@ urlpatterns = [
     path("desk/", include("desk.urls")),
     path("vendors/", include("vendors.urls")),
     path("", include("core.urls")),
+    path("", include("giveaways.urls")),
     path("", include("events.urls")),
 ]
 

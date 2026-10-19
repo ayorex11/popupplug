@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Giveaway: {{ event.title }} | {{ SITE_NAME }}{% endblock %}
+{% block robots %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+{% block content %}
+<div class="panel" style="margin-top:28px">
+  <span class="eyebrow">Giveaway</span>
+  <h1 style="font-size:28px">Win at {{ event.title }}</h1>
+  {% if giveaway %}
+    <p class="muted">{{ giveaway.winner_count }} winners. Prize: {{ giveaway.prize }}.</p>
+    {% if entry %}{% include "giveaways/_ticket.html" %}
+    {% elif giveaway.is_open %}{% include "giveaways/_form.html" %}
+    {% else %}<div class="notice">Entries aren't open right now.</div>{% endif %}
+  {% else %}<div class="notice">{{ message }}</div>{% endif %}
+  <p style="margin-top:18px"><a href="{{ event.get_absolute_url }}">&larr; Back to the pop-up</a></p>
+</div>
+{% endblock %}

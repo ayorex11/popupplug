@@ -1,6 +1,7 @@
 import uuid
 
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
@@ -109,6 +110,15 @@ class Event(models.Model):
     @property
     def is_published(self):
         return self.status == self.Status.PUBLISHED
+
+    @property
+    def open_giveaway(self):
+        """The giveaway if entries are open right now, else None (safe when none exists)."""
+        try:
+            g = self.giveaway
+        except ObjectDoesNotExist:
+            return None
+        return g if g.is_open else None
 
     @property
     def is_past(self):

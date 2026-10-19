@@ -11,6 +11,10 @@ from django.views.decorators.http import require_POST
 from core import notifications
 from events.caching import bump_version
 from events.models import Event
+import secrets
+
+from django.db import transaction
+from giveaways.models import Entry, Giveaway
 from social import instagram, services
 from social.models import SocialPost
 from vendors.models import Vendor
@@ -205,3 +209,88 @@ def social_action(request, pk):
         services.regenerate(post)
         messages.success(request, "Card and caption rebuilt.")
     return _back(request, reverse("desk:social"))
+
+
+# --------------------------------------------------------------------------- giveaway
+@staff_required
+def giveaway(request):
+    giveaways = list(Giveaway.objects.select_related("event", "event__vendor").order_by("-created_at"))
+    current = next((g for g in giveaways if str(g.pk) == request.GET.get("g")), giveaways[0] if giveaways else None)
+    ctx = {"giveaways": giveaways, "g": current, "tab": "giveaway"}
+    if current:
+        entries = list(current.entries.all())
+        ip_counts = {}
+        for e in entries:
+            if e.ip_hash:
+                ip_counts[e.ip_hash] = ip_counts.get(e.ip_hash, 0) + 1
+        for e in entries:
+            e.shared_ip = ip_counts.get(e.ip_hash, 0) >= 4  # soft flag only: carriers share IPs
+        order = {"winner": 0, "backup": 1, "declined": 2, "": 3}
+        entries.sort(key=lambda e: (order[e.result], e.backup_order or 0, e.created_at))
+        ctx.update({
+            "entries": entries,
+            "total": len(entries),
+            "eligible": sum(1 for e in entries if not e.excluded),
+            "claimed": sum(1 for e in entries if e.claimed_at),
+            "winners_n": sum(1 for e in entries if e.result == "winner"),
+        })
+    return render(request, "desk/giveaway.html", ctx)
+
+
+@staff_required
+@require_POST
+def giveaway_action(request, pk):
+    g = get_object_or_404(Giveaway, pk=pk)
+    action = request.POST.get("action")
+    entry_id = request.POST.get("entry")
+    now = timezone.now()
+
+    if action == "draw":
+        with transaction.atomic():
+            g = Giveaway.objects.select_for_update().get(pk=pk)
+            if g.drawn_at:
+                messages.error(request, "This giveaway has already been drawn.")
+            elif now < g.closes_at:
+                messages.error(request, "Entries are still open. Wait until the closing time to draw.")
+            else:
+                pool = list(g.entries.filter(excluded=False))
+                if not pool:
+                    messages.error(request, "There are no eligible entries to draw from.")
+                else:
+                    picked = secrets.SystemRandom().sample(pool, min(len(pool), g.winner_count + g.backup_count))
+                    for i, e in enumerate(picked):
+                        if i < g.winner_count:
+                            e.result = Entry.Result.WINNER
+                        else:
+                            e.result, e.backup_order = Entry.Result.BACKUP, i - g.winner_count + 1
+                        e.save(update_fields=["result", "backup_order"])
+                    g.drawn_at = now
+                    g.save(update_fields=["drawn_at"])
+                    messages.success(request, f"Drawn: {min(len(pool), g.winner_count)} winners and {max(0, len(picked) - g.winner_count)} backups.")
+    elif entry_id:
+        e = get_object_or_404(Entry, pk=entry_id, giveaway=g)
+        if action in ("exclude", "include"):
+            if g.drawn_at:
+                messages.error(request, "The draw is done, so entries can't be changed. Use 'No reply' to swap a winner.")
+            else:
+                e.excluded = action == "exclude"
+                e.save(update_fields=["excluded"])
+        elif action == "notified":
+            e.notified_at = now
+            e.save(update_fields=["notified_at"])
+        elif action == "claimed" and e.result == Entry.Result.WINNER:
+            e.claimed_at = now
+            e.save(update_fields=["claimed_at"])
+            messages.success(request, f"{e.name} has collected their prize.")
+        elif action == "declined" and e.result == Entry.Result.WINNER and not e.claimed_at:
+            with transaction.atomic():
+                e.result, e.backup_order = Entry.Result.DECLINED, None
+                e.save(update_fields=["result", "backup_order"])
+                nxt = g.entries.filter(result=Entry.Result.BACKUP).order_by("backup_order").first()
+                if nxt:
+                    nxt.result, nxt.backup_order = Entry.Result.WINNER, None
+                    nxt.save(update_fields=["result", "backup_order"])
+                    messages.success(request, f"{e.name} replaced by backup {nxt.name}. Message them now.")
+                else:
+                    messages.warning(request, "No backups left to promote.")
+    return _back(request, reverse("desk:giveaway") + f"?g={g.pk}")

@@ -1,0 +1,38 @@
+{# Entry form (used in the dialog and on the standalone page). Expects: event, giveaway, form #}
+<form method="post" action="{% url 'giveaways:enter' event.slug %}" data-giveaway-form novalidate>
+  {% csrf_token %}
+  <div class="field">
+    <label for="gw-name">Your name</label>
+    <input type="text" id="gw-name" name="name" autocomplete="name" maxlength="80" required value="{{ form.name.value|default:'' }}">
+    {{ form.name.errors }}
+  </div>
+  <div class="field">
+    <label for="gw-phone">WhatsApp number</label>
+    <input type="tel" id="gw-phone" name="phone" autocomplete="tel" inputmode="tel" placeholder="0801 234 5678" required value="{{ form.phone.value|default:'' }}">
+    <div class="help">We'll message you here if you win. One entry per number.</div>
+    {{ form.phone.errors }}
+  </div>
+  <div class="field" style="position:absolute;left:-9999px" aria-hidden="true">
+    <label for="gw-web">Leave this empty</label>
+    <input type="text" id="gw-web" name="website" tabindex="-1" autocomplete="off">
+  </div>
+  <div class="field">
+    <label><input type="checkbox" name="attend" required>I can attend on {{ event.start_at|date:"D j M" }} at {{ event.venue }}</label>
+    {{ form.attend.errors }}
+  </div>
+  <div class="field">
+    <label><input type="checkbox" name="rules" required>I agree to the <a href="#gw-rules" data-open-rules>giveaway rules</a></label>
+    {{ form.rules.errors }}
+  </div>
+  <details id="gw-rules" class="help" style="margin-bottom:16px">
+    <summary>Rules and privacy</summary>
+    <ul style="padding-left:18px;margin:8px 0 0">
+      <li>Free to enter. One entry per WhatsApp number.</li>
+      <li>Entries close {{ giveaway.closes_at|date:"D j M, g:i A" }}. {{ giveaway.winner_count }} winners are picked at random, plus backups.</li>
+      <li>Prize: {{ giveaway.prize }}. Collected in person at the pop-up, with your code. No cash alternative, not transferable.</li>
+      <li>Winners are messaged on WhatsApp and must reply within 24 hours, or a backup takes their place.</li>
+      <li>Your name and number are used only to run this giveaway. They're not sold or shared, and not used for marketing.</li>
+    </ul>
+  </details>
+  <button class="btn block" type="submit">Enter the draw</button>
+</form>

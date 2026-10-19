@@ -1,0 +1,24 @@
+{# Expects: event, giveaway, gw_entry (or None) #}
+<div class="giveaway-banner">
+  <span class="eyebrow">Giveaway</span>
+  <h3>{{ giveaway.winner_count }} winners get {{ giveaway.prize }}</h3>
+  {% if gw_entry %}
+    {% include "giveaways/_ticket.html" with entry=gw_entry message="You're entered." %}
+  {% elif giveaway.state == "open" %}
+    <p class="muted small" style="margin:0 0 12px">Enter free with your name and WhatsApp number. Entries close {{ giveaway.closes_at|date:"D j M, g:i A" }}.</p>
+    <a class="btn" href="{% url 'giveaways:enter' event.slug %}" data-open-giveaway>Enter the draw</a>
+  {% elif giveaway.state == "upcoming" %}
+    <p class="muted small" style="margin:0">Entries open {{ giveaway.opens_at|date:"D j M, g:i A" }}.</p>
+  {% elif giveaway.state == "closed" %}
+    <p class="muted small" style="margin:0">Entries are closed. Winners will be picked and messaged on WhatsApp.</p>
+  {% else %}
+    <p class="muted small" style="margin:0">The draw is done. Winners have been messaged on WhatsApp.</p>
+  {% endif %}
+</div>
+{% if giveaway.state == "open" and not gw_entry %}
+<dialog id="giveaway-dialog" class="confirm giveaway-dialog">
+  <div style="display:flex;justify-content:space-between;align-items:start;gap:12px"><h3 style="margin:0">Enter the draw</h3><button type="button" class="link-btn" data-close-giveaway aria-label="Close">&times;</button></div>
+  <p class="muted small">{{ giveaway.winner_count }} winners get {{ giveaway.prize }}.</p>
+  <div data-giveaway-body>{% include "giveaways/_form.html" %}</div>
+</dialog>
+{% endif %}

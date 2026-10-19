@@ -1,0 +1,5 @@
+<div class="ticket">
+  <div class="muted small">{{ message|default:"You're in!" }} Your entry code:</div>
+  <div class="ticket-code" data-ticket-code>{{ entry.code }}</div>
+  <p class="small muted" style="margin:0">Screenshot this. It's your ticket, not a prize: winners are picked at random after {{ giveaway.closes_at|date:"D j M" }} and messaged on WhatsApp.</p>
+</div>

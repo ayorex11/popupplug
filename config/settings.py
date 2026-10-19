@@ -74,6 +74,7 @@ INSTALLED_APPS = [
     "events",
     "desk",
     "social",
+    "giveaways",
 ]
 
 MIDDLEWARE = [

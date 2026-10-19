@@ -216,3 +216,20 @@ footer a { color: var(--ink); font-weight: 700; }
   display: grid; place-items: center; font: 800 30px/1 var(--body); text-decoration: none; z-index: 40; }
 @media (min-width: 900px) { .fab { display: none; } }
 @media print { .site-header, .ticker, .fab, footer { display: none; } }
+
+/* giveaway */
+.giveaway-banner { background: var(--yellow); border: 2px solid var(--ink); border-radius: 16px; box-shadow: 4px 4px 0 var(--ink); padding: 16px 18px; margin: 0 0 22px; }
+.giveaway-banner h3 { margin: 0 0 6px; font-size: 20px; }
+.giveaway-banner .eyebrow { background: #fff; margin-bottom: 8px; }
+.ticket { background: #fff; border: 2px dashed var(--ink); border-radius: 12px; padding: 14px; text-align: center; }
+.ticket-code { font: 800 30px/1.2 var(--head); letter-spacing: .08em; margin: 4px 0 8px; }
+.giveaway-dialog { max-width: min(440px, calc(100% - 32px)); width: 100%; max-height: calc(100% - 32px); overflow-y: auto; }
+.giveaway-dialog::backdrop { background: rgba(27,27,27,.5); }
+.gw-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.gw-table th, .gw-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--hair); vertical-align: middle; }
+.gw-table form { display: inline; }
+.gw-stats { display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0; }
+.gw-stats div { background: #fff; border: 1.5px solid var(--hair); border-radius: 12px; padding: 10px 16px; }
+.gw-stats b { display: block; font: 800 24px/1.1 var(--head); }
+.gw-chip { align-self: flex-start; display: inline-block; background: var(--yellow); border: 1.5px solid var(--ink); border-radius: 99px; padding: 3px 12px; font: 800 12px/1.5 var(--body); text-decoration: none; color: var(--ink); margin: 2px 0 4px; }
+.gw-chip:hover { box-shadow: 2px 2px 0 var(--ink); }

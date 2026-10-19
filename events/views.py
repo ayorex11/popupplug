@@ -25,7 +25,7 @@ PAGE_SIZE = 12
 # Helpers
 # ---------------------------------------------------------------------------
 def published():
-    return Event.objects.filter(status=Event.Status.PUBLISHED).select_related("vendor", "area", "category")
+    return Event.objects.filter(status=Event.Status.PUBLISHED).select_related("vendor", "area", "category", "giveaway")
 
 
 def weekend_window(now=None):
@@ -106,7 +106,7 @@ def event_list(request):
 
 
 def event_detail(request, slug):
-    event = get_object_or_404(Event.objects.select_related("vendor", "area", "category"), slug=slug)
+    event = get_object_or_404(Event.objects.select_related("vendor", "area", "category", "giveaway"), slug=slug)
     vendor = vendor_for(request.user) if request.user.is_authenticated else None
     can_manage = request.user.is_staff or (vendor is not None and event.vendor_id == vendor.pk)
     if not event.is_published and not can_manage:
@@ -118,9 +118,19 @@ def event_detail(request, slug):
     elif request.session.session_key:
         interested = Interested.objects.filter(event=event, session_key=request.session.session_key).exists()
 
+    giveaway = getattr(event, "giveaway", None)
+    if giveaway is not None and not (giveaway.is_active and event.is_published):
+        giveaway = None
+    gw_entry = None
+    if giveaway is not None:
+        code = request.session.get(f"giveaway_{giveaway.pk}")
+        if code:
+            gw_entry = giveaway.entries.filter(code=code).first()
+
     more = published().filter(area=event.area, end_at__gte=timezone.now()).exclude(pk=event.pk)[:3]
     return render(request, "events/event_detail.html", {
         "event": event, "can_manage": can_manage, "interested": interested, "more": more,
+        "giveaway": giveaway, "gw_entry": gw_entry,
     })
 
 

@@ -99,3 +99,51 @@ document.addEventListener("click", async (e) => {
     ppToast("Caption copied.", "success");
   } catch (err) { el.select(); ppToast("Couldn't copy automatically. Text is selected, press Ctrl/Cmd+C.", "error"); }
 });
+
+// Giveaway: the "Enter the draw" link works as a normal page without JS; with JS it opens a dialog.
+document.addEventListener("click", (e) => {
+  const open = e.target.closest("[data-open-giveaway]");
+  const dlg = document.getElementById("giveaway-dialog");
+  if (open && dlg && typeof dlg.showModal === "function") { e.preventDefault(); dlg.showModal(); }
+  if (e.target.closest("[data-close-giveaway]") && dlg) dlg.close();
+  if (e.target === dlg) dlg.close(); // click on the backdrop
+  const rules = e.target.closest("[data-open-rules]");
+  if (rules) { e.preventDefault(); const d = document.getElementById("gw-rules"); if (d) { d.open = true; d.scrollIntoView({ block: "nearest" }); } }
+});
+
+document.addEventListener("submit", async (e) => {
+  const form = e.target.closest("form[data-giveaway-form]");
+  if (!form) return;
+  e.preventDefault();
+  const btn = form.querySelector("button[type=submit]");
+  btn.disabled = true;
+  form.querySelectorAll(".errorlist").forEach((n) => n.remove());
+  try {
+    const res = await fetch(form.action, {
+      method: "POST", body: new FormData(form), credentials: "same-origin",
+      headers: { "X-Requested-With": "XMLHttpRequest" },
+    });
+    const data = await res.json();
+    if (data.ok) {
+      const box = form.closest("[data-giveaway-body]") || form.parentElement;
+      box.innerHTML = '<div class="ticket"><div class="muted small"></div><div class="ticket-code"></div>' +
+        '<p class="small muted" style="margin:0">Screenshot this. It\'s your ticket, not a prize. Winners are picked at random after entries close and messaged on WhatsApp.</p></div>';
+      box.querySelector(".muted").textContent = (data.message || "You're in!") + " Your entry code:";
+      box.querySelector(".ticket-code").textContent = data.code;
+      return;
+    }
+    const errs = data.errors || {};
+    Object.keys(errs).forEach((k) => {
+      const input = form.querySelector('[name="' + k + '"]');
+      if (!input) return;
+      const ul = document.createElement("ul"); ul.className = "errorlist";
+      const li = document.createElement("li"); li.textContent = errs[k]; ul.appendChild(li);
+      input.closest(".field").appendChild(ul);
+    });
+    ppToast(data.message || "Something went wrong.", "error");
+  } catch (err) {
+    form.submit(); // no-JS style fallback
+  } finally {
+    btn.disabled = false;
+  }
+});

@@ -44,6 +44,8 @@
       <a class="btn ghost" href="https://wa.me/?text={{ event.title|urlencode }}%20{{ SITE_URL|urlencode }}{{ event.get_absolute_url|urlencode }}" rel="noopener" target="_blank">Share on WhatsApp</a>
     </div>
 
+    {% if giveaway %}{% include "giveaways/_banner.html" %}{% endif %}
+
     <h2 style="font-size:22px">About this pop-up</h2>
     <p class="desc">{{ event.description }}</p>
 

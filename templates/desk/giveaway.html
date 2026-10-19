@@ -1,0 +1,67 @@
+{% extends "desk/base.html" %}
+{% block title %}Giveaway &middot; Desk{% endblock %}
+{% block content %}
+<h1 style="margin-top:28px">Giveaway</h1>
+{% if not g %}
+  <div class="empty"><p class="muted" style="margin:0">No giveaway yet. Create one in <a href="{% url 'admin:giveaways_giveaway_add' %}">Django admin</a> and attach it to the Simmer &amp; Sip event.</p></div>
+{% else %}
+  {% if giveaways|length > 1 %}<div class="tabs">{% for x in giveaways %}<a class="chip {% if x.pk == g.pk %}active{% endif %}" href="?g={{ x.pk }}">{{ x.event.vendor.name }}</a>{% endfor %}</div>{% endif %}
+  <div class="item" style="max-width:720px">
+    <strong>{{ g.event.title }}</strong> <span class="pill {% if g.state == 'open' %}matcha{% else %}butter{% endif %}">{{ g.state }}</span><br>
+    <span class="muted small">{{ g.winner_count }} winners + {{ g.backup_count }} backups &middot; {{ g.prize }} &middot; closes {{ g.closes_at|date:"D j M, g:i A" }}</span>
+  </div>
+
+  <div class="gw-stats">
+    <div><b>{{ total }}</b><span class="muted small">entries</span></div>
+    <div><b>{{ eligible }}</b><span class="muted small">eligible</span></div>
+    {% if g.drawn_at %}<div><b>{{ claimed }}/{{ g.winner_count }}</b><span class="muted small">prizes collected</span></div>{% endif %}
+  </div>
+
+  {% if not g.drawn_at %}
+    <p class="muted small">Before drawing, scan the list below. Rows marked <strong>same network</strong> share a connection with 3+ other entries, so check them. Click "Exclude" on any that look fake.</p>
+    <form method="post" action="{% url 'desk:giveaway_action' g.pk %}" data-confirm="Draw {{ g.winner_count }} winners and {{ g.backup_count }} backups now? This can only be done once." data-confirm-ok="Draw winners">
+      {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <button class="btn good" name="action" value="draw" {% if g.state != 'closed' %}disabled{% endif %}>Draw winners</button>
+      {% if g.state != 'closed' %}<span class="muted small">&nbsp;Available once entries close.</span>{% endif %}
+    </form>
+  {% endif %}
+
+  <div style="overflow-x:auto;margin:18px 0 40px">
+  <table class="gw-table">
+    <thead><tr><th>Name</th><th>WhatsApp</th><th>Code</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for e in entries %}
+      <tr {% if e.excluded %}style="opacity:.5"{% endif %}>
+        <td>{{ e.name }}{% if e.shared_ip %} <span class="pill butter">same network</span>{% endif %}{% if e.excluded %} <span class="pill rejected">excluded</span>{% endif %}</td>
+        <td>{{ e.phone }}</td>
+        <td><code>{{ e.code }}</code></td>
+        <td>
+          {% if e.result == "winner" %}<span class="pill {% if e.claimed_at %}posted{% else %}matcha{% endif %}">{% if e.claimed_at %}Collected{% else %}Winner{% endif %}</span>
+          {% elif e.result == "backup" %}<span class="pill lilac">Backup {{ e.backup_order }}</span>
+          {% elif e.result == "declined" %}<span class="pill skipped">No reply</span>
+          {% else %}<span class="muted small">{{ e.created_at|date:"j M, g:i A" }}</span>{% endif %}
+          {% if e.notified_at %}<span class="muted small">&middot; messaged</span>{% endif %}
+        </td>
+        <td>
+          <form method="post" action="{% url 'desk:giveaway_action' g.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><input type="hidden" name="entry" value="{{ e.pk }}">
+            {% if e.result == "winner" or e.result == "backup" %}
+              <a class="btn ghost small" href="{{ e.wa_url }}" target="_blank" rel="noopener">WhatsApp</a>
+              <button class="btn ghost small" name="action" value="notified">Messaged</button>
+            {% endif %}
+            {% if e.result == "winner" and not e.claimed_at %}
+              <button class="btn good small" name="action" value="claimed">Collected</button>
+              <button class="btn danger small" name="action" value="declined" data-confirm="Mark {{ e.name }} as no reply and promote the next backup?" data-confirm-ok="Swap">No reply</button>
+            {% endif %}
+            {% if not g.drawn_at %}
+              {% if e.excluded %}<button class="btn ghost small" name="action" value="include">Include</button>
+              {% else %}<button class="btn danger small" name="action" value="exclude">Exclude</button>{% endif %}
+            {% endif %}
+          </form>
+        </td>
+      </tr>
+    {% empty %}<tr><td colspan="5" class="muted">No entries yet.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  </div>
+{% endif %}
+{% endblock %}
