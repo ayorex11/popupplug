@@ -56,3 +56,19 @@ class DraftTests(Base):
         self.assertContains(page, "TikTok caption")
         self.assertContains(page, "X post")
         self.assertContains(page, "Cake Pop-Up")
+
+
+class WelcomeRoleTests(Base):
+    def test_wording_follows_role(self):
+        for role, needle in (("vendor", "Follow along for their pop-ups in Lagos"),
+                             ("organiser", "events are now listed"),
+                             ("both", "pop-ups and events")):
+            self.vendor.role = role
+            self.assertIn(needle, cards.welcome_caption(self.vendor), role)
+            self.assertLessEqual(len(cards.x_welcome_post(self.vendor)), 250)
+            self.assertLessEqual(cards.hashtag_count(cards.tiktok_welcome_caption(self.vendor)), 5)
+
+    def test_cards_render_for_every_role(self):
+        for role in ("vendor", "organiser", "both"):
+            self.vendor.role = role
+            self.assertTrue(cards.render_welcome_card(self.vendor))

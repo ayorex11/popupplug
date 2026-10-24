@@ -108,7 +108,9 @@ def render_event_card(event):
 def render_welcome_card(vendor):
     img = Image.new("RGB", (W, H), YELLOW)
     d = ImageDraw.Draw(img)
-    d.text((W // 2, 150), "NEW ON THE PLUG", font=font("Jakarta-ExtraBold", 40), fill=INK, anchor="mm")
+    org = vendor.role == "organiser"
+    both = vendor.role == "both"
+    d.text((W // 2, 150), "NEW ORGANISER ON THE PLUG" if org else "NEW ON THE PLUG", font=font("Jakarta-ExtraBold", 40), fill=INK, anchor="mm")
     _shadow_box(d, (90, 250, W - 90, 930), "#FFFFFF", radius=36, offset=14, width=6)
     d.ellipse((W // 2 - 110, 310, W // 2 + 110, 530), fill=CORAL, outline=INK, width=6)
     d.text((W // 2, 420), vendor.initials, font=font("Bricolage-ExtraBold", 120), fill="#FFFFFF", anchor="mm")
@@ -118,9 +120,11 @@ def render_welcome_card(vendor):
     for line in lines:
         d.text((W // 2, y), line, font=name_font, fill=INK, anchor="mm")
         y += 96
-    d.text((W // 2, 840), "is now on PopUp Plug", font=font("Jakarta-Bold", 44), fill="#5C5750", anchor="mm")
-    d.text((W // 2, 1060), "Pop-ups in Lagos,", font=font("Bricolage-ExtraBold", 64), fill=INK, anchor="mm")
-    d.text((W // 2, 1135), "all in one place.", font=font("Bricolage-ExtraBold", 64), fill=CORAL, anchor="mm")
+    sub = "is now listing events on PopUp Plug" if org else ("is now selling and hosting on PopUp Plug" if both else "is now on PopUp Plug")
+    d.text((W // 2, 840), sub, font=font("Jakarta-Bold", 40 if (org or both) else 44), fill="#5C5750", anchor="mm")
+    line1, line2 = ("Events and vendors,", "all in one place.") if (org or both) else ("Pop-ups in Lagos,", "all in one place.")
+    d.text((W // 2, 1060), line1, font=font("Bricolage-ExtraBold", 64), fill=INK, anchor="mm")
+    d.text((W // 2, 1135), line2, font=font("Bricolage-ExtraBold", 64), fill=CORAL, anchor="mm")
     _footer(d)
     return _to_jpeg_file(img, f"welcome-{vendor.pk}.jpg")
 
@@ -146,13 +150,27 @@ def event_caption(event):
     )
 
 
+def _kind(vendor):
+    return vendor.role if vendor.role in ("organiser", "both") else "vendor"
+
+
 def welcome_caption(vendor):
     who = f"@{vendor.instagram}" if vendor.instagram else vendor.name
-    return (
-        f"Welcome to PopUp Plug, {who}!\n\n"
-        f"Follow along for their pop-ups in Lagos. See what's coming up at popupplug.com.ng (link in bio).\n\n"
-        f"Hosting a pop-up? List it free.\n\n{HASHTAGS}"
-    )
+    kind = _kind(vendor)
+    if kind == "organiser":
+        body = (f"Welcome to PopUp Plug, {who}!\n\n"
+                f"Their events are now listed in Lagos, and vendors can see when booths are open. "
+                f"Find them at popupplug.com.ng (link in bio).\n\n"
+                f"Organising an event? List it free, and tell vendors you're taking applications.")
+    elif kind == "both":
+        body = (f"Welcome to PopUp Plug, {who}!\n\n"
+                f"Follow along for their pop-ups and events in Lagos. See what's coming up at popupplug.com.ng (link in bio).\n\n"
+                f"Hosting or selling at pop-ups? List it free.")
+    else:
+        body = (f"Welcome to PopUp Plug, {who}!\n\n"
+                f"Follow along for their pop-ups in Lagos. See what's coming up at popupplug.com.ng (link in bio).\n\n"
+                f"Hosting a pop-up? List it free.")
+    return f"{body}\n\n{HASHTAGS}"
 
 
 # ---------------------------------------------------------------------------
@@ -211,11 +229,14 @@ def tiktok_event_caption(event):
 
 def tiktok_welcome_caption(vendor):
     who = f"@{vendor.tiktok}" if vendor.tiktok else vendor.name
-    text = (
-        f"Welcome to PopUp Plug, {who}! 🎉\n"
-        f"Find their pop-ups in Lagos at popupplug.com.ng (link in bio).\n"
-        f"Hosting a pop-up? List it free.\n\n{HASHTAGS}"
-    )
+    kind = _kind(vendor)
+    if kind == "organiser":
+        line = "Their events are now listed in Lagos, and vendors can see when booths are open. Details at popupplug.com.ng (link in bio).\nOrganising an event? List it free."
+    elif kind == "both":
+        line = "Find their pop-ups and events in Lagos at popupplug.com.ng (link in bio).\nHosting or selling at pop-ups? List it free."
+    else:
+        line = "Find their pop-ups in Lagos at popupplug.com.ng (link in bio).\nHosting a pop-up? List it free."
+    text = f"Welcome to PopUp Plug, {who}! 🎉\n{line}\n\n{HASHTAGS}"
     return limit_hashtags(text)[:TIKTOK_MAX_CHARS]
 
 
@@ -251,7 +272,9 @@ def x_event_post(event):
 def x_welcome_post(vendor):
     from django.conf import settings
     who = f"@{vendor.twitter}" if vendor.twitter else vendor.name
-    text = _fit([f"Welcome to PopUp Plug, {who}!", f"See their Lagos pop-ups: {settings.SITE_URL}"], [], X_MAX_CHARS)
+    kind = _kind(vendor)
+    what = {"organiser": "See their events and open booths", "both": "See their pop-ups and events"}.get(kind, "See their Lagos pop-ups")
+    text = _fit([f"Welcome to PopUp Plug, {who}!", f"{what}: {settings.SITE_URL}"], [], X_MAX_CHARS)
     if len(text) + 1 + len("#LagosPopUp") <= X_MAX_CHARS:
         text += "\n#LagosPopUp"
     return text[:X_MAX_CHARS]
