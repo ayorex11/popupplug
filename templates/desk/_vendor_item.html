@@ -8,7 +8,7 @@
     </div>
     {% if v.pending_changes %}<div class="changes"><strong>Changed since last approval</strong>
       <ul>{% for label, c in v.pending_changes.items %}<li><span class="what">{{ label }}</span> <del>{{ c.old }}</del> <span aria-hidden="true">&rarr;</span> <ins>{{ c.new }}</ins></li>{% endfor %}</ul></div>{% endif %}
-    <dl class="detail">
+    <dl class="vdetail">
       <dt>Business</dt><dd>{{ v.name }}</dd>
       <dt>Role</dt><dd>{{ v.role_label }}</dd>
       <dt>Email</dt><dd>{{ v.user.email }}</dd>

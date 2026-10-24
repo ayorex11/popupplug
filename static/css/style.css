@@ -250,9 +250,9 @@ footer a { color: var(--ink); font-weight: 700; }
 @media (min-width: 900px) { .vc-filters { grid-template-columns: 1fr 1fr 1fr 1fr auto; } }
 
 /* desk: vendor detail and what-changed blocks */
-.detail { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 8px 0 12px; font-size: 14px; }
-.detail dt { color: var(--muted, #6b6258); font-weight: 700; }
-.detail dd { margin: 0; overflow-wrap: anywhere; }
+.vdetail { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 8px 0 12px; font-size: 14px; }
+.vdetail dt { color: var(--muted, #6b6258); font-weight: 700; }
+.vdetail dd { margin: 0; overflow-wrap: anywhere; }
 .changes { background: #fff8d6; border: 1.5px solid #e7c84a; border-radius: 10px; padding: 10px 12px; margin: 8px 0; font-size: 14px; }
 .changes ul { margin: 6px 0 0; padding-left: 18px; }
 .changes del { background: #ffd9d4; text-decoration: line-through; padding: 0 3px; border-radius: 3px; }
