@@ -26,6 +26,7 @@ class Command(BaseCommand):
             Area.objects.get_or_create(city=city, slug=slugify(name), defaults={"name": name})
         for name in CATEGORIES:
             Category.objects.get_or_create(slug=slugify(name), defaults={"name": name})
+        Category.objects.get_or_create(slug="all-categories", defaults={"name": "All categories", "is_general": True})
         if options.get("verbosity", 1) > 0:
             self.stdout.write(self.style.SUCCESS(
                 f"Seeded {Area.objects.count()} areas and {Category.objects.count()} categories."

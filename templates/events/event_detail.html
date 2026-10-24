@@ -24,11 +24,13 @@
       <span class="pill {{ event.category|tint }}">{{ event.category.name }}</span>
       {% if event.is_free_entry %}<span class="pill matcha">Free entry</span>{% endif %}
       &nbsp;by <a href="{% url 'vendors:profile' event.vendor.slug %}">{{ event.vendor.name }}</a>
-      {% if event.vendor.verified %}<span class="pill verified" title="Verified vendor">Verified</span>{% endif %}
+      {% if event.vendor.is_organiser %}<span class="pill lilac">Organiser</span>{% endif %}
+      {% if event.vendor.verified %}<span class="pill verified" title="Verified {{ event.vendor.role_label|lower }}">Verified</span>{% endif %}
     </p>
 
     <ul class="facts">
       <li><strong>When</strong>{{ event.start_at|date:"D j M, g:i A" }} &ndash; {{ event.end_at|date:"D j M, g:i A" }}</li>
+      {% if event.daily_hours %}<li><strong>Hours</strong>{{ event.daily_hours }}</li>{% endif %}
       <li><strong>Where</strong>{{ event.venue }}, {{ event.area.name }}, Lagos</li>
       {% if event.entry_note %}<li><strong>Entry</strong>{{ event.entry_note }}</li>{% endif %}
     </ul>
@@ -46,14 +48,15 @@
 
     {% if giveaway %}{% include "giveaways/_banner.html" %}{% endif %}
 
+    {% if event.vendor_call_open %}{% include "events/_vendor_call_panel.html" %}
+    {% elif event.seeking_vendors and event.is_published %}<p class="notice">Vendor applications for this event are closed.</p>{% endif %}
+
     <h2 style="font-size:22px">About this pop-up</h2>
     <p class="desc">{{ event.description }}</p>
 
-    <h3 style="margin-top:20px">Contact the vendor</h3>
+    <h3 style="margin-top:20px">Contact the {% if event.vendor.role == "organiser" or event.seeking_vendors %}organiser{% else %}vendor{% endif %}</h3>
     <p class="links">
-      <a href="{{ event.vendor.whatsapp_url }}" rel="noopener" target="_blank">WhatsApp</a>
-      {% if event.vendor.instagram %} <a href="{{ event.vendor.instagram_url }}" rel="noopener nofollow" target="_blank">Instagram</a>{% endif %}
-      {% if event.vendor.twitter %} <a href="{{ event.vendor.twitter_url }}" rel="noopener nofollow" target="_blank">Twitter/X</a>{% endif %}
+      {% for c in event.vendor.contact_links %}<a href="{{ c.url }}" rel="noopener{% if c.external %} nofollow{% endif %}" target="_blank">{{ c.label }}</a> {% endfor %}
     </p>
 
     {% if can_manage %}

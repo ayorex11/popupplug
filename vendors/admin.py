@@ -5,9 +5,9 @@ from .models import Vendor
 
 @admin.register(Vendor)
 class VendorAdmin(admin.ModelAdmin):
-    list_display = ("name", "phone", "instagram", "twitter", "verified", "created_at")
-    list_filter = ("verified",)
-    search_fields = ("name", "phone", "instagram", "twitter", "user__email", "user__username")
+    list_display = ("name", "role", "phone", "instagram", "tiktok", "twitter", "verified", "created_at")
+    list_filter = ("verified", "role")
+    search_fields = ("name", "phone", "instagram", "tiktok", "twitter", "website", "user__email", "user__username")
     list_editable = ("verified",)
     readonly_fields = ("created_at",)
     actions = ["mark_verified"]

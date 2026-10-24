@@ -1,21 +1,32 @@
 <article class="item">
   <div>
-    <span class="pill {{ v.status }}">{{ v.status|title }}</span>
+    <span class="pill {{ v.status }}">{{ v.status|title }}</span>{% if v.role != "vendor" %} <span class="pill lilac">{{ v.role_label }}</span>{% endif %}
     <h3 style="margin-top:6px">{{ v.name }}</h3>
     <div class="meta">
-      <span>{{ v.user.email }}</span>
       <span>Joined {{ v.created_at|date:"j M, g:i A" }}</span>
       {% if v.event_total is not None %}<span>{{ v.event_total }} event{{ v.event_total|pluralize }}{% if v.event_pending %} ({{ v.event_pending }} pending){% endif %}</span>{% endif %}
     </div>
+    {% if v.pending_changes %}<div class="changes"><strong>Changed since last approval</strong>
+      <ul>{% for label, c in v.pending_changes.items %}<li><span class="what">{{ label }}</span> <del>{{ c.old }}</del> <span aria-hidden="true">&rarr;</span> <ins>{{ c.new }}</ins></li>{% endfor %}</ul></div>{% endif %}
+    <dl class="detail">
+      <dt>Business</dt><dd>{{ v.name }}</dd>
+      <dt>Role</dt><dd>{{ v.role_label }}</dd>
+      <dt>Email</dt><dd>{{ v.user.email }}</dd>
+      <dt>WhatsApp</dt><dd>{{ v.phone|default:"(none)" }}</dd>
+      <dt>Instagram</dt><dd>{% if v.instagram %}@{{ v.instagram }}{% else %}(none){% endif %}</dd>
+      <dt>TikTok</dt><dd>{% if v.tiktok %}@{{ v.tiktok }}{% else %}(none){% endif %}</dd>
+      <dt>Twitter/X</dt><dd>{% if v.twitter %}@{{ v.twitter }}{% else %}(none){% endif %}</dd>
+      <dt>Website</dt><dd>{{ v.website|default:"(none)" }}</dd>
+      <dt>Bio</dt><dd style="white-space:pre-line">{{ v.bio|default:"(none)" }}</dd>
+      <dt>Joined</dt><dd>{{ v.created_at|date:"j M Y, g:i A" }}</dd>
+    </dl>
     <div class="links" style="margin-bottom:8px">
-      <a href="{{ v.whatsapp_url }}" target="_blank" rel="noopener">WhatsApp {{ v.phone }}</a>
-      {% if v.instagram %}<a href="{{ v.instagram_url }}" target="_blank" rel="noopener">Instagram @{{ v.instagram }}</a>{% endif %}
-      {% if v.twitter %}<a href="{{ v.twitter_url }}" target="_blank" rel="noopener">X @{{ v.twitter }}</a>{% endif %}
+      {% for c in v.contact_links %}<a href="{{ c.url }}" target="_blank" rel="noopener">{{ c.label }}</a>{% endfor %}
+      {% if not v.contact_links %}<span class="muted small">No contact details</span>{% endif %}
     </div>
-    {% if v.bio %}<p class="muted small" style="margin:0 0 6px">{{ v.bio }}</p>{% endif %}
     <div class="row-actions">
       <form method="post" action="{% url 'desk:vendor_action' v.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
-        {% if v.status == "pending" %}<button class="btn good small" name="action" value="approve">Approve vendor</button>
+        {% if v.status == "pending" %}<button class="btn good small" name="action" value="approve">{% if v.pending_changes %}Approve changes{% else %}Approve vendor{% endif %}</button>
         {% elif v.status == "verified" %}<button class="btn ghost small" name="action" value="unverify">Remove verification</button>
         {% endif %}
         {% if v.status == "suspended" %}<button class="btn small" name="action" value="reactivate">Reactivate</button>

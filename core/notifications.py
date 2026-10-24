@@ -92,22 +92,67 @@ def send_card_email(subject, heading, intro, rows, to, button_label="", button_u
 # ---------------------------------------------------------------------------
 def notify_new_vendor(vendor):
     when = timezone.localtime(vendor.created_at).strftime("%a %d %b, %I:%M %p")
+    kind = "organiser" if vendor.role == "organiser" else "vendor"
     return send_card_email(
-        subject=f"New vendor signed up: {vendor.name}",
-        heading="New vendor to review",
-        intro="Someone just signed up. Check their Instagram or WhatsApp, then approve them in your desk.",
+        subject=f"New {kind} signed up: {vendor.name}",
+        heading=f"New {kind} to review",
+        intro="Someone just signed up. Check their Instagram or WhatsApp, then approve them in your desk."
+              + (" Organisers can ask vendors for booth fees, so check their past events first." if vendor.is_organiser else ""),
         rows=[
             ("Business", vendor.name),
-            ("WhatsApp", f"{vendor.phone}  ({vendor.whatsapp_url})"),
+            ("Role", vendor.role_label),
+            ("WhatsApp", f"{vendor.phone}  ({vendor.whatsapp_url})" if vendor.phone else ""),
             ("Email", vendor.user.email),
             ("Instagram", f"@{vendor.instagram}  ({vendor.instagram_url})" if vendor.instagram else ""),
+            ("TikTok", f"@{vendor.tiktok}  ({vendor.tiktok_url})" if vendor.tiktok else ""),
             ("Twitter/X", f"@{vendor.twitter}  ({vendor.twitter_url})" if vendor.twitter else ""),
+            ("Website", vendor.website),
             ("Signed up", when),
         ],
         to=admin_recipients(),
         button_label="Review in your desk",
         button_url=reverse("desk:vendors") + "?tab=pending",
         footer="You get this email because you're an admin of PopUp Plug.",
+    )
+
+
+def _change_rows(changes):
+    return [(label, f"{c['old']}  →  {c['new']}") for label, c in (changes or {}).items()]
+
+
+def notify_vendor_profile_edited(vendor):
+    return send_card_email(
+        subject=f"Profile edited, re-approve: {vendor.name}",
+        heading="Edited profile waiting for approval",
+        intro=f"{vendor.name} changed their profile, so they're unverified again until you approve it.",
+        rows=[
+            *_change_rows(vendor.pending_changes),
+            ("Business", vendor.name),
+            ("Role", vendor.role_label),
+            ("WhatsApp", f"{vendor.phone}  ({vendor.whatsapp_url})" if vendor.phone else ""),
+            ("Instagram", f"@{vendor.instagram}  ({vendor.instagram_url})" if vendor.instagram else ""),
+            ("TikTok", f"@{vendor.tiktok}  ({vendor.tiktok_url})" if vendor.tiktok else ""),
+            ("Twitter/X", f"@{vendor.twitter}  ({vendor.twitter_url})" if vendor.twitter else ""),
+            ("Website", vendor.website),
+        ],
+        to=admin_recipients(),
+        button_label="Review in your desk",
+        button_url=reverse("desk:vendors") + "?tab=pending",
+        footer="You get this email because you're an admin of PopUp Plug.",
+    )
+
+
+def notify_password_reset(user, url):
+    return send_card_email(
+        subject="Reset your PopUp Plug password",
+        heading="Reset your password",
+        intro="Someone asked to reset the password for this account. Use the button to choose a new one. "
+              "The link works for a few hours. If it wasn't you, ignore this email and your password stays the same.",
+        rows=[("Account", user.email)],
+        to=[user.email],
+        button_label="Choose a new password",
+        button_url=url,
+        footer="You get this email because a password reset was requested on PopUp Plug.",
     )
 
 
@@ -123,6 +168,7 @@ def notify_event_pending(event, edited=False):
             ("When", start),
             ("Where", f"{event.venue}, {event.area.name}"),
             ("Category", event.category.name),
+            *(_change_rows(event.pending_changes) if edited else []),
         ],
         to=admin_recipients(),
         button_label="Review in your desk",

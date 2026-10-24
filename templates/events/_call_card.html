@@ -1,0 +1,16 @@
+{% load humanize pp_tags %}
+<article class="card">
+  <a class="cover" href="{{ event.get_absolute_url }}" tabindex="-1" aria-hidden="true">
+    <img src="{{ event.cover_image.url }}" alt="{{ event.title }} in {{ event.area.name }}, Lagos" loading="lazy" width="640" height="400">
+  </a>
+  <div class="date-badge"><b>{{ event.start_at|day_abbr }}</b><strong>{{ event.start_at|day_num }}</strong><i>{{ event.start_at|month_abbr }}</i></div>
+  <div class="card-body">
+    <span><span class="pill {{ event.category|tint }}">{{ event.category.name }}</span> <span class="pill butter" style="background:#fff;border:1px solid var(--hair);color:var(--ink2)">{{ event.area.name }}</span></span>
+    <h3><a href="{{ event.get_absolute_url }}">{{ event.title }}</a></h3>
+    <div class="by">{{ event|when_range }} &middot; by {{ event.vendor.name }}{% if event.vendor.verified %} <span class="pill verified">Verified</span>{% endif %}</div>
+    <div class="foot">
+      <span class="price">Booth: {{ event.booth_price_short }}</span>
+      <span class="muted">{% if event.vendor_slots %}{{ event.vendor_slots }} booth{{ event.vendor_slots|pluralize }}{% endif %}{% if event.vendor_slots and event.apply_by %} &middot; {% endif %}{% if event.apply_by %}apply by {{ event.apply_by|date:"j M" }}{% endif %}</span>
+    </div>
+  </div>
+</article>

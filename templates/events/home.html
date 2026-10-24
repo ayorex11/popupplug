@@ -15,6 +15,7 @@
     <a class="chip active" href="{% url 'events:list' %}?when=today">Today</a>
     <a class="chip" href="{% url 'events:list' %}?when=weekend">This weekend</a>
     <a class="chip" href="{% url 'events:list' %}?free=1">Free entry</a>
+    <a class="chip" href="{% url 'events:vendor_calls' %}">Vendor calls</a>
     {% for c in categories|slice:":5" %}<a class="chip" href="{% url 'events:list' %}?category={{ c.slug }}">{{ c.name }}</a>{% endfor %}
   </div>
 </section>

@@ -26,8 +26,8 @@ class CategoryAdmin(admin.ModelAdmin):
 class EventAdmin(admin.ModelAdmin):
     """This is the moderation dashboard: filter by 'Pending review' and approve in bulk."""
 
-    list_display = ("title", "vendor", "area", "category", "start_at", "status", "interested_count", "thumb")
-    list_filter = ("status", "area", "category", "is_free_entry")
+    list_display = ("title", "vendor", "area", "category", "start_at", "status", "seeking_vendors", "interested_count", "thumb")
+    list_filter = ("status", "seeking_vendors", "area", "category", "is_free_entry")
     search_fields = ("title", "vendor__name", "venue")
     date_hierarchy = "start_at"
     readonly_fields = ("slug", "interested_count", "created_at", "updated_at", "thumb")

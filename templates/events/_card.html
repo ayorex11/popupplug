@@ -10,6 +10,7 @@
     <h3><a href="{{ event.get_absolute_url }}">{{ event.title }}</a></h3>
     <div class="by">{{ event.start_at|date:"D j M, g:i A" }} &middot; by {{ event.vendor.name }}</div>
     {% with gw=event.open_giveaway %}{% if gw %}<a class="gw-chip" href="{{ event.get_absolute_url }}">&#127873; Giveaway: {{ gw.winner_count }} winners</a>{% endif %}{% endwith %}
+    {% if event.vendor_call_open %}<a class="gw-chip vc-chip" href="{{ event.get_absolute_url }}#vendor-call">Vendors wanted</a>{% endif %}
     <div class="foot">
       <span class="price">{% if event.is_free_entry %}Free{% elif event.entry_note %}{{ event.entry_note }}{% else %}Paid entry{% endif %}</span>
       {% if event.interested_count %}<span class="muted">{{ event.interested_count|intcomma }} interested</span>{% endif %}

@@ -7,13 +7,15 @@
     <h3 style="margin-top:6px">{{ e.title }}</h3>
     <div class="meta"><span>{{ e|when_range }}</span><span>{{ e.venue }}, {{ e.area.name }}</span><span>{{ e.category.name }}</span><span>{% if e.is_free_entry %}Free entry{% else %}{{ e.entry_note|default:"Paid" }}{% endif %}</span></div>
     <div class="meta"><span>By <a href="{% url 'vendors:profile' e.vendor.slug %}" target="_blank"><strong>{{ e.vendor.name }}</strong></a></span>
-      <span><a href="{{ e.vendor.whatsapp_url }}" target="_blank" rel="noopener">WhatsApp</a></span>
-      {% if e.vendor.instagram %}<span><a href="{{ e.vendor.instagram_url }}" target="_blank" rel="noopener">Instagram</a></span>{% endif %}</div>
+      {% for c in e.vendor.contact_links %}<span><a href="{{ c.url }}" target="_blank" rel="noopener">{{ c.label }}</a></span>{% endfor %}</div>
+    {% if e.pending_changes %}<div class="changes"><strong>Changed since last approval</strong>
+      <ul>{% for label, c in e.pending_changes.items %}<li><span class="what">{{ label }}</span> <del>{{ c.old }}</del> <span aria-hidden="true">&rarr;</span> <ins>{{ c.new }}</ins></li>{% endfor %}</ul></div>{% endif %}
+    {% if e.seeking_vendors %}<div class="notice">Vendor call: {{ e.booth_price_display }}{% if e.vendor_slots %} &middot; {{ e.vendor_slots }} booth{{ e.vendor_slots|pluralize }}{% endif %}{% if e.apply_by %} &middot; apply by {{ e.apply_by|date:"j M" }}{% endif %}{% if e.apply_link %} &middot; <a href="{{ e.apply_link }}" target="_blank" rel="noopener nofollow">application link</a>{% endif %}{% if e.vendor_info %}<br>{{ e.vendor_info }}{% endif %}<br><strong>Check this organiser before approving: vendors may pay them for booths.</strong></div>{% endif %}
     <p class="small" style="white-space:pre-line;max-height:5.5em;overflow:hidden;margin:0 0 6px">{{ e.description|truncatechars:260 }}</p>
     {% if e.review_note and e.status == "rejected" %}<div class="notice bad">Reason sent to vendor: {{ e.review_note }}</div>{% endif %}
     <div class="row-actions">
       <form method="post" action="{% url 'desk:event_action' e.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
-        {% if e.status != "published" %}<button class="btn good small" name="action" value="approve">Approve and publish</button>{% else %}<button class="btn ghost small" name="action" value="unpublish">Unpublish</button>{% endif %}
+        {% if e.status != "published" %}<button class="btn good small" name="action" value="approve">{% if e.pending_changes %}Approve changes{% else %}Approve and publish{% endif %}</button>{% else %}<button class="btn ghost small" name="action" value="unpublish">Unpublish</button>{% endif %}
       </form>
       {% if e.status != "rejected" %}
       <form method="post" action="{% url 'desk:event_action' e.pk %}" class="reject-form">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">

@@ -1,25 +1,28 @@
 {% extends "base.html" %}
 {% block title %}{% if editing %}Edit event{% else %}Post a pop-up{% endif %} &middot; {{ SITE_NAME }}{% endblock %}
 {% block content %}
-<h1 style="margin-top:32px">{% if editing %}Edit your pop-up{% else %}Post a pop-up{% endif %}</h1>
-<p class="muted">{% if user.vendor.verified %}Verified vendors go live instantly.{% else %}New vendors' events are reviewed, usually within a day.{% endif %}</p>
+<h1 style="margin-top:32px">{% if editing %}Edit your event{% else %}Post an event{% endif %}</h1>
+<p class="muted">{% if editing %}Saving changes sends the event back for review, and it's hidden until we approve it again.{% elif user.vendor.verified %}Verified accounts go live instantly.{% else %}New accounts' events are reviewed, usually within a day.{% endif %}</p>
 
-<form class="panel" method="post" enctype="multipart/form-data" novalidate>
+<form class="panel" method="post" enctype="multipart/form-data" novalidate{% if editing %} data-editing{% endif %}>
   {% csrf_token %}
   {{ form.non_field_errors }}
-  {% for field in form %}
-    <div class="field">
-      {% if field.field.widget.input_type == "checkbox" %}
-        <label for="{{ field.id_for_label }}">{{ field }} {{ field.label }}</label>
-      {% else %}
-        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-        {{ field }}
-      {% endif %}
-      {% if field.help_text %}<div class="help">{{ field.help_text }}</div>{% endif %}
-      {{ field.errors }}
+  {% for field in form.main_fields %}{% include "events/_form_field.html" %}{% endfor %}
+
+  {% if form.offers_vendor_call %}
+  <fieldset class="vcall-form" id="vcall-form">
+    <legend>Looking for vendors?</legend>
+    <p class="muted small" style="margin-top:0">Optional. Tell vendors you're taking booth applications. Everything here can be left out.</p>
+    {% for field in form.call_fields %}
+      {% if field.name == "seeking_vendors" %}{% include "events/_form_field.html" %}{% endif %}
+    {% endfor %}
+    <div id="vcall-extra">
+      {% for field in form.call_fields %}{% if field.name != "seeking_vendors" %}{% include "events/_form_field.html" %}{% endif %}{% endfor %}
     </div>
-  {% endfor %}
-  <button class="btn" type="submit">{% if editing %}Save changes{% else %}Submit pop-up{% endif %}</button>
+  </fieldset>
+  {% endif %}
+
+  <button class="btn" type="submit">{% if editing %}Save changes{% else %}Submit{% endif %}</button>
   <a class="btn ghost" href="{% url 'vendors:dashboard' %}">Cancel</a>
 </form>
 {% endblock %}

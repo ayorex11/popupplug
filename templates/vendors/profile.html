@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ vendor.name }}: pop-up vendor in Lagos | {{ SITE_NAME }}{% endblock %}
+{% block title %}{{ vendor.name }}: pop-up {% if vendor.role == "organiser" %}organiser{% else %}vendor{% endif %} in Lagos | {{ SITE_NAME }}{% endblock %}
 {% block meta_description %}{% if vendor.bio %}{{ vendor.bio }}{% else %}Pop-up events by {{ vendor.name }} in Lagos.{% endif %} See where {{ vendor.name }} is popping up next on {{ SITE_NAME }}.{% endblock %}
 {% block robots %}{% if upcoming or past %}{{ block.super }}{% else %}<meta name="robots" content="noindex, follow">{% endif %}{% endblock %}
 {% block og_title %}{{ vendor.name }} on {{ SITE_NAME }}{% endblock %}
@@ -8,25 +8,23 @@
 <div class="profile-head">
   <div class="avatar">{{ vendor.initials }}</div>
   <div class="grow">
-    <h1>{{ vendor.name }} {% if vendor.verified %}<span class="pill verified">Verified</span>{% endif %}</h1>
+    <h1>{{ vendor.name }} {% if vendor.is_organiser %}<span class="pill lilac">Organiser</span>{% endif %} {% if vendor.verified %}<span class="pill verified">Verified</span>{% endif %}</h1>
     {% if vendor.bio %}<p class="muted" style="margin:0 0 6px">{{ vendor.bio }}</p>{% endif %}
     <div class="links">
-      <a href="{{ vendor.whatsapp_url }}" rel="noopener" target="_blank">WhatsApp</a>
-      {% if vendor.instagram %}<a href="{{ vendor.instagram_url }}" rel="noopener nofollow" target="_blank">Instagram</a>{% endif %}
-      {% if vendor.twitter %}<a href="{{ vendor.twitter_url }}" rel="noopener nofollow" target="_blank">Twitter/X</a>{% endif %}
+      {% for c in vendor.contact_links %}<a href="{{ c.url }}" rel="noopener{% if c.external %} nofollow{% endif %}" target="_blank">{{ c.label }}</a>{% endfor %}
     </div>
   </div>
 </div>
 
 <section class="section">
-  <h2>Upcoming pop-ups</h2>
+  <h2>Upcoming events</h2>
   {% if upcoming %}<div class="grid">{% for event in upcoming %}{% include "events/_card.html" %}{% endfor %}</div>
-  {% else %}<p class="muted">No upcoming pop-ups right now.</p>{% endif %}
+  {% else %}<p class="muted">Nothing coming up right now.</p>{% endif %}
 </section>
 
 {% if past %}
 <section class="section">
-  <h2>Past pop-ups</h2>
+  <h2>Past events</h2>
   <div class="grid">{% for event in past %}{% include "events/_card.html" %}{% endfor %}</div>
 </section>
 {% endif %}

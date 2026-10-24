@@ -121,7 +121,7 @@ class DeskFlowTests(TestCase):
         start = timezone.localtime(timezone.now() + timedelta(days=3)).replace(second=0, microsecond=0)
         with self.captureOnCommitCallbacks(execute=True):
             r = self.client.post(reverse("events:create"), {
-                "title": "Fresh Pop", "category": Category.objects.first().pk, "area": Area.objects.get(slug="lekki").pk,
+                "title": "Fresh Pop", "category": Category.objects.filter(is_general=False).first().pk, "area": Area.objects.get(slug="lekki").pk,
                 "venue": "12 Admiralty Way", "description": "x", "start_at": start.strftime("%Y-%m-%dT%H:%M"),
                 "end_at": (start + timedelta(hours=4)).strftime("%Y-%m-%dT%H:%M"), "is_free_entry": "on", "cover_image": make_image(),
             })

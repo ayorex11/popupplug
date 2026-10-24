@@ -147,3 +147,94 @@ document.addEventListener("submit", async (e) => {
     btn.disabled = false;
   }
 });
+
+// Event form: show the booth fields only while "looking for vendors" is ticked, and keep the
+// price boxes and "contact me for the price" from fighting each other. (The server validates too.)
+(function () {
+  const toggle = document.getElementById("id_seeking_vendors");
+  const extra = document.getElementById("vcall-extra");
+  if (!toggle || !extra) return;
+  const ask = document.getElementById("id_booth_price_on_request");
+  const prices = ["id_booth_price", "id_booth_price_max"].map((id) => document.getElementById(id)).filter(Boolean);
+  const sync = () => {
+    extra.hidden = !toggle.checked;
+    if (ask) prices.forEach((el) => { el.disabled = ask.checked; });
+  };
+  toggle.addEventListener("change", sync);
+  if (ask) ask.addEventListener("change", sync);
+  sync();
+})();
+
+// Password fields: add a show/hide eye.
+(function () {
+  const eye = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const eyeOff = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.9 10.9 0 0 1 12 19C5 19 1 12 1 12a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.1 9.1 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/></svg>';
+  document.querySelectorAll('input[type="password"]').forEach((input) => {
+    const wrap = document.createElement("div");
+    wrap.className = "pw-wrap";
+    input.parentNode.insertBefore(wrap, input);
+    wrap.appendChild(input);
+    const btn = document.createElement("button");
+    btn.type = "button"; btn.className = "pw-eye"; btn.innerHTML = eye;
+    btn.setAttribute("aria-label", "Show password"); btn.setAttribute("aria-pressed", "false");
+    btn.addEventListener("click", () => {
+      const show = input.type === "password";
+      input.type = show ? "text" : "password";
+      btn.innerHTML = show ? eyeOff : eye;
+      btn.setAttribute("aria-label", show ? "Hide password" : "Show password");
+      btn.setAttribute("aria-pressed", String(show));
+    });
+    wrap.appendChild(btn);
+  });
+})();
+
+// Event form: check the dates the moment they're picked, not after submitting.
+(function () {
+  const start = document.getElementById("id_start_at");
+  const end = document.getElementById("id_end_at");
+  if (!start || !end) return;
+  const msg = document.createElement("div");
+  msg.className = "field-error-live"; msg.hidden = true; msg.setAttribute("role", "alert");
+  end.closest(".field").appendChild(msg);
+  const pad = (n) => String(n).padStart(2, "0");
+  const local = (d) => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes());
+  const editing = !!document.querySelector("[data-editing]");
+  if (!editing) start.min = local(new Date());
+  const check = () => {
+    let problem = "";
+    if (start.value) {
+      end.min = start.value;
+      if (end.value && end.value <= start.value) problem = "The end time must be after the start time.";
+      else if (end.value && (new Date(end.value) - new Date(start.value)) > 14 * 86400000) problem = "Pop-ups longer than 14 days aren't supported.";
+    }
+    end.setCustomValidity(problem);
+    end.setAttribute("aria-invalid", problem ? "true" : "false");
+    msg.textContent = problem; msg.hidden = !problem;
+    return !problem;
+  };
+  start.addEventListener("input", check);
+  end.addEventListener("input", check);
+  start.closest("form").addEventListener("submit", (e) => {
+    if (!check()) { e.preventDefault(); end.focus(); }
+  });
+  check();
+})();
+
+// Desk: live character and hashtag counters for the TikTok / X drafts.
+(function () {
+  document.querySelectorAll("[data-counter-for]").forEach((badge) => {
+    const box = document.getElementById(badge.dataset.counterFor);
+    if (!box) return;
+    const max = parseInt(badge.dataset.max, 10), maxTags = parseInt(badge.dataset.maxTags || "0", 10);
+    const update = () => {
+      const chars = box.value.length, tags = (box.value.match(/#\w+/g) || []).length;
+      let text = chars + "/" + max, bad = chars > max;
+      if (maxTags) { text += ", " + tags + "/" + maxTags + " hashtags"; bad = bad || tags > maxTags; }
+      badge.textContent = "(" + text + ")";
+      badge.style.color = bad ? "#b3261e" : "";
+      badge.style.fontWeight = bad ? "800" : "";
+    };
+    box.addEventListener("input", update);
+    update();
+  });
+})();

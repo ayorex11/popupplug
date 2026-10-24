@@ -2,6 +2,7 @@ import uuid
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.validators import MaxValueValidator, URLValidator
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
@@ -47,6 +48,8 @@ class Area(models.Model):
 class Category(models.Model):
     name = models.CharField(max_length=60, unique=True)
     slug = models.SlugField(unique=True)
+    # The "All categories" choice for organisers whose event suits every kind of vendor.
+    is_general = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["name"]
@@ -74,6 +77,25 @@ class Event(models.Model):
     end_at = models.DateTimeField(db_index=True)
     is_free_entry = models.BooleanField("Free entry", default=True)
     entry_note = models.CharField(max_length=120, blank=True, help_text="Optional, e.g. 'Free before 2pm' or 'Gate fee ₦2,000'")
+    daily_hours = models.CharField(max_length=60, blank=True, help_text="Optional, for multi-day events. e.g. '12pm to 9pm daily'")
+
+    # --- Vendor call: organisers can say they're looking for vendors (all optional) ---
+    seeking_vendors = models.BooleanField("We're looking for vendors", default=False)
+    booth_price = models.PositiveIntegerField(
+        "Booth price (₦)", null=True, blank=True, validators=[MaxValueValidator(10_000_000)],
+        help_text="Starting price per booth, in naira. Enter 0 for free booths.")
+    booth_price_max = models.PositiveIntegerField(
+        "Up to (₦)", null=True, blank=True, validators=[MaxValueValidator(10_000_000)],
+        help_text="Optional. If booths vary in price, the top of the range.")
+    booth_price_on_request = models.BooleanField("Contact me for the booth price", default=False)
+    vendor_slots = models.PositiveSmallIntegerField("Booths available", null=True, blank=True, validators=[MaxValueValidator(1000)])
+    apply_by = models.DateField("Apply by", null=True, blank=True)
+    apply_link = models.URLField("Application link", max_length=300, blank=True, validators=[URLValidator(schemes=["http", "https"])],
+                                 help_text="Optional. A form or page where vendors apply. Otherwise they'll use your contact details.")
+    vendor_info = models.CharField("What's included / who you want", max_length=500, blank=True,
+                                   help_text="Optional. e.g. 'Table and 2 chairs included. Fashion and beauty vendors preferred.'")
+    pending_changes = models.JSONField(default=dict, blank=True)  # edits since staff last approved
+    vendor_call_closed = models.BooleanField("Booths are full / applications closed", default=False)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING, db_index=True)
     interested_count = models.PositiveIntegerField(default=0)  # denormalized for fast lists
     review_note = models.CharField(max_length=200, blank=True, help_text="Shown to the vendor, e.g. why an event was rejected")
@@ -87,6 +109,7 @@ class Event(models.Model):
             models.Index(fields=["status", "start_at"]),
             models.Index(fields=["status", "area", "start_at"]),
             models.Index(fields=["status", "category", "start_at"]),
+            models.Index(fields=["status", "seeking_vendors", "start_at"]),
         ]
 
     def __str__(self):
@@ -123,6 +146,34 @@ class Event(models.Model):
     @property
     def is_past(self):
         return self.end_at < timezone.now()
+
+    @property
+    def vendor_call_open(self):
+        """True while vendors can still apply for a booth."""
+        if not (self.seeking_vendors and self.is_published) or self.vendor_call_closed or self.is_past:
+            return False
+        return not (self.apply_by and self.apply_by < timezone.localdate())
+
+    @property
+    def booth_price_display(self):
+        def naira(n):
+            return f"₦{n:,}"
+        if self.booth_price_on_request or self.booth_price is None:
+            return "Contact the organiser for the price"
+        if self.booth_price == 0 and not self.booth_price_max:
+            return "Free booths"
+        if self.booth_price_max and self.booth_price_max != self.booth_price:
+            return f"{naira(self.booth_price)} to {naira(self.booth_price_max)}"
+        return naira(self.booth_price)
+
+    @property
+    def booth_price_short(self):
+        if self.booth_price_on_request or self.booth_price is None:
+            return "Ask for price"
+        if self.booth_price == 0 and not self.booth_price_max:
+            return "Free booths"
+        prefix = "From " if self.booth_price_max and self.booth_price_max != self.booth_price else ""
+        return f"{prefix}₦{self.booth_price:,}"
 
 
 class Interested(models.Model):

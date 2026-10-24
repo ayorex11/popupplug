@@ -88,8 +88,8 @@ def vendor_action(request, pk):
     vendor = get_object_or_404(Vendor.objects.select_related("user"), pk=pk)
     action = request.POST.get("action")
     if action == "approve":
-        vendor.verified, vendor.verified_at = True, timezone.now()
-        vendor.save(update_fields=["verified", "verified_at"])
+        vendor.verified, vendor.verified_at, vendor.pending_changes = True, timezone.now(), {}
+        vendor.save(update_fields=["verified", "verified_at", "pending_changes"])
         notifications.notify_vendor_verified(vendor)
         services.queue_welcome_post(vendor)
         messages.success(request, f"{vendor.name} is verified. They can now publish instantly.")
@@ -144,6 +144,7 @@ def event_action(request, pk):
     now = timezone.now()
     if action == "approve":
         event.status, event.review_note, event.reviewed_at = Event.Status.PUBLISHED, "", now
+        event.pending_changes = {}
         event.save()
         notifications.notify_vendor_event_live(event)
         services.queue_event_post(event)

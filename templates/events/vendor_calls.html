@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Events looking for vendors in Lagos | {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}Find pop-up markets, fairs and events in Lagos that are looking for vendors. Filter by area, category and booth price, then apply directly to the organiser.{% endblock %}
+{% block robots %}{% if filtered %}<meta name="robots" content="noindex, follow">{% else %}{{ block.super }}{% endif %}{% endblock %}
+{% block content %}
+<h1 style="margin-top:28px">Events looking for vendors</h1>
+<p class="muted">Organisers who are taking booth applications. Compare booth prices, then contact the organiser directly. PopUp Plug doesn't take or handle booth payments.</p>
+
+<form class="filters vc-filters" method="get">
+  <div class="field">
+    <label>Area</label>
+    <select name="area"><option value="">All of Lagos</option>
+      {% for a in areas %}<option value="{{ a.slug }}" {% if area == a.slug %}selected{% endif %}>{{ a.name }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label>Booth budget</label>
+    <select name="budget"><option value="">Any price</option>
+      {% for value, label in budgets %}<option value="{{ value }}" {% if budget == value|stringformat:"s" %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label>Category</label>
+    <select name="category"><option value="">All categories</option>
+      {% for c in categories %}<option value="{{ c.slug }}" {% if category == c.slug %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label>Starts</label>
+    <select name="when">
+      <option value="any" {% if when == "any" %}selected{% endif %}>Any time</option>
+      <option value="week" {% if when == "week" %}selected{% endif %}>Within 7 days</option>
+      <option value="month" {% if when == "month" %}selected{% endif %}>Within 30 days</option>
+    </select>
+  </div>
+  <div>
+    <label class="small"><input type="checkbox" name="ask" value="1" {% if include_ask %}checked{% endif %}>Include "contact for price"</label>
+    <button class="btn block" type="submit">Filter</button>
+  </div>
+</form>
+
+{% if hidden_ask %}<div class="notice">{{ hidden_ask }} event{{ hidden_ask|pluralize }} {{ hidden_ask|pluralize:"wants,want" }} you to contact the organiser for the price, so {{ hidden_ask|pluralize:"it's,they're" }} hidden by your budget. <a href="?{% if querystring %}{{ querystring }}&amp;{% endif %}ask=1">Show {{ hidden_ask|pluralize:"it,them" }}</a></div>{% endif %}
+
+{% if page.object_list %}
+  <div class="grid" style="margin-top:16px">{% for event in page %}{% include "events/_call_card.html" %}{% endfor %}</div>
+  {% if page.paginator.num_pages > 1 %}
+  <div class="pager">
+    {% if page.has_previous %}<a class="btn ghost small" href="?{% if querystring %}{{ querystring }}&amp;{% endif %}page={{ page.previous_page_number }}">&larr; Prev</a>{% endif %}
+    <span class="muted small">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+    {% if page.has_next %}<a class="btn ghost small" href="?{% if querystring %}{{ querystring }}&amp;{% endif %}page={{ page.next_page_number }}">Next &rarr;</a>{% endif %}
+  </div>
+  {% endif %}
+{% else %}
+  <div class="empty"><h2>No events match yet</h2><p>{% if filtered %}Try a different area or budget, or <a href="{% url 'events:vendor_calls' %}">clear filters</a>.{% else %}No organiser is looking for vendors right now. Check back soon.{% endif %}</p>
+  <p class="muted small">Organising something? <a href="{% url 'vendors:signup' %}"><strong>List your event for free</strong></a> and tell vendors you're taking applications.</p></div>
+{% endif %}
+{% endblock %}

@@ -1,16 +1,16 @@
 {% extends "base.html" %}
-{% block title %}List your pop-up in Lagos for free | {{ SITE_NAME }}{% endblock %}
-{% block meta_description %}Vendors: list your pop-up, market stall or food drop in Lagos on {{ SITE_NAME }} for free, and get seen by shoppers looking for their next pop-up.{% endblock %}
+{% block title %}List your pop-up or event in Lagos for free | {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}Vendors and organisers: list your pop-up, market or food drop in Lagos on {{ SITE_NAME }} for free, get seen by shoppers, and find vendors for your event.{% endblock %}
 {% block ticker %}{% endblock %}
 {% block content %}
-<h1 style="margin-top:32px">List your pop-up, free</h1>
-<p class="muted">Create a vendor account to post pop-up sales and events in Lagos. We review new vendors before their first event goes live.</p>
+<h1 style="margin-top:32px">List your pop-up or event, free</h1>
+<p class="muted">Create a free account to post pop-ups and events in Lagos, whether you sell at them or organise them. Organisers can also tell vendors they're taking booth applications. We review new accounts before their first event goes live.</p>
 <form class="panel" method="post" novalidate>
   {% csrf_token %}
   {{ form.non_field_errors }}
   {% for field in form %}
     <div class="field">
-      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      <label {% if field.name != "role" %}for="{{ field.id_for_label }}"{% endif %}>{{ field.label }}</label>
       {{ field }}
       {% if field.help_text %}<div class="help">{{ field.help_text|safe }}</div>{% endif %}
       {{ field.errors }}

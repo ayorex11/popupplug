@@ -1,7 +1,7 @@
 {% extends "desk/base.html" %}
-{% block title %}Instagram &middot; Desk{% endblock %}
+{% block title %}Social posts &middot; Desk{% endblock %}
 {% block content %}
-<h1 style="margin-top:28px">Instagram</h1>
+<h1 style="margin-top:28px">Social posts</h1>
 <div class="item" style="max-width:720px">
   {% if not ig_enabled %}
     <strong>Instagram posts are off.</strong>
@@ -40,6 +40,21 @@
         {% elif p.status == "skipped" %}<button class="btn ghost small" name="action" value="restore">Restore</button>{% endif %}
       </div>
     </form>
+    {% if p.status != "skipped" %}
+    <div class="other-posts">
+      <div class="field">
+        <label for="tt{{ p.pk }}">TikTok caption <span class="counter" data-counter-for="tt{{ p.pk }}" data-max-tags="5" data-max="2200"></span></label>
+        <textarea id="tt{{ p.pk }}" rows="7" maxlength="2200">{{ p.tiktok_draft }}</textarea>
+        <button class="btn ghost small" type="button" data-copy-from="tt{{ p.pk }}">Copy TikTok caption</button>
+      </div>
+      <div class="field">
+        <label for="x{{ p.pk }}">X post <span class="counter" data-counter-for="x{{ p.pk }}" data-max="250"></span></label>
+        <textarea id="x{{ p.pk }}" rows="5" maxlength="250">{{ p.x_draft }}</textarea>
+        <button class="btn ghost small" type="button" data-copy-from="x{{ p.pk }}">Copy X post</button>
+      </div>
+      <p class="muted small" style="margin:0">Post these by hand with the downloaded image. TikTok allows up to 5 hashtags here and X up to 250 characters.</p>
+    </div>
+    {% endif %}
   </div>
 </article>
 {% empty %}<div class="empty"><p class="muted" style="margin:0">Nothing here yet. Cards appear when you approve an event or a vendor.</p></div>

@@ -153,3 +153,105 @@ def welcome_caption(vendor):
         f"Follow along for their pop-ups in Lagos. See what's coming up at popupplug.com.ng (link in bio).\n\n"
         f"Hosting a pop-up? List it free.\n\n{HASHTAGS}"
     )
+
+
+# ---------------------------------------------------------------------------
+# TikTok and X drafts. Nothing is posted for you: staff copy these next to the downloaded card.
+# ---------------------------------------------------------------------------
+import re as _re
+
+TIKTOK_MAX_HASHTAGS = 5
+TIKTOK_MAX_CHARS = 2200
+X_MAX_CHARS = 250  # counted literally, link included, so it's safe however X counts URLs
+
+_HASHTAG = _re.compile(r"#\w+")
+
+
+def limit_hashtags(text, n=TIKTOK_MAX_HASHTAGS):
+    """Keep the first n hashtags and drop the rest."""
+    seen = 0
+
+    def keep(match):
+        nonlocal seen
+        seen += 1
+        return match.group(0) if seen <= n else ""
+
+    return _re.sub(r"[ \t]{2,}", " ", _HASHTAG.sub(keep, text)).strip()
+
+
+def hashtag_count(text):
+    return len(_HASHTAG.findall(text))
+
+
+def _when_where(event):
+    start = timezone.localtime(event.start_at)
+    end = timezone.localtime(event.end_at)
+    t = lambda x: x.strftime("%I:%M %p").lstrip("0")  # noqa: E731
+    if start.date() == end.date():
+        when = f"{start:%a %d %b}, {t(start)}"
+    else:
+        when = f"{start:%d %b} to {end:%d %b}"
+    return when, f"{event.venue}, {event.area.name}"
+
+
+def tiktok_event_caption(event):
+    when, where = _when_where(event)
+    entry = "Free entry" if event.is_free_entry else (event.entry_note or "Paid entry")
+    tt = event.vendor.tiktok
+    by = f"@{tt}" if tt else event.vendor.name
+    text = (
+        f"{event.title} 🎉\n"
+        f"📍 {where}\n🗓 {when}\n🎟 {entry}\n"
+        f"By {by}\n\n"
+        f"Full details on popupplug.com.ng (link in bio)\n\n"
+        f"{HASHTAGS}"
+    )
+    return limit_hashtags(text)[:TIKTOK_MAX_CHARS]
+
+
+def tiktok_welcome_caption(vendor):
+    who = f"@{vendor.tiktok}" if vendor.tiktok else vendor.name
+    text = (
+        f"Welcome to PopUp Plug, {who}! 🎉\n"
+        f"Find their pop-ups in Lagos at popupplug.com.ng (link in bio).\n"
+        f"Hosting a pop-up? List it free.\n\n{HASHTAGS}"
+    )
+    return limit_hashtags(text)[:TIKTOK_MAX_CHARS]
+
+
+def _fit(parts, optional, limit):
+    """Join the required lines, then add each optional line only while it still fits."""
+    text = "\n".join(p for p in parts if p)
+    for extra in optional:
+        trial = f"{text}\n{extra}" if extra else text
+        if extra and len(trial) <= limit:
+            text = trial
+    return text
+
+
+def x_event_post(event):
+    from core.notifications import absolute_url
+    when, where = _when_where(event)
+    link = absolute_url(event.get_absolute_url())
+    entry = "Free entry" if event.is_free_entry else ""
+    tw = event.vendor.twitter
+    by = f"By @{tw}" if tw else ""
+    tail = f"{when}\n{event.area.name}\n{link}"
+    # Title gets whatever room is left, so the date, area and link are never cut off.
+    room = X_MAX_CHARS - len(tail) - 1
+    title = event.title if len(event.title) <= room else event.title[: max(room - 1, 1)].rstrip() + "…"
+    text = _fit([title, when, event.area.name, link], [entry, by], X_MAX_CHARS)
+    for tags in ("#LagosPopUp #WhatsPoppingInLagos", "#LagosPopUp"):  # the longest set that still fits
+        if len(text) + 1 + len(tags) <= X_MAX_CHARS:
+            text += "\n" + tags
+            break
+    return text[:X_MAX_CHARS]
+
+
+def x_welcome_post(vendor):
+    from django.conf import settings
+    who = f"@{vendor.twitter}" if vendor.twitter else vendor.name
+    text = _fit([f"Welcome to PopUp Plug, {who}!", f"See their Lagos pop-ups: {settings.SITE_URL}"], [], X_MAX_CHARS)
+    if len(text) + 1 + len("#LagosPopUp") <= X_MAX_CHARS:
+        text += "\n#LagosPopUp"
+    return text[:X_MAX_CHARS]

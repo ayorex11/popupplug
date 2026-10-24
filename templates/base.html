@@ -31,6 +31,7 @@
     <a class="brand" href="{% url 'events:home' %}"><img src="{% static 'img/logo-96.png' %}" alt="" width="40" height="40"><span>PopUp Plug<small>Lagos pop-up guide</small></span></a>
     <nav class="nav" aria-label="Main">
       <a href="{% url 'events:list' %}" class="hide-sm">Browse</a>
+      <a href="{% url 'events:vendor_calls' %}" class="hide-sm">Vendor calls</a>
       {% if user.is_authenticated %}
         {% if user.is_staff %}<a href="{% url 'desk:home' %}">Desk{% if staff_pending_total %}<span class="count">{{ staff_pending_total }}</span>{% endif %}</a>{% endif %}
         {% if user.vendor %}<a href="{% url 'vendors:dashboard' %}" class="hide-sm">My events</a>
@@ -55,7 +56,7 @@
   <div class="wrap">
     <div><strong style="font-family:var(--head);font-size:18px;color:var(--ink)">PopUp Plug</strong><br>Pop-ups, markets and food drops in Lagos.</div>
     <div>
-      <a href="{% url 'events:list' %}">Browse</a> &nbsp;&middot;&nbsp; <a href="{% url 'vendors:signup' %}">List your pop-up (free)</a>
+      <a href="{% url 'events:list' %}">Browse</a> &nbsp;&middot;&nbsp; <a href="{% url 'events:vendor_calls' %}">Vendor calls</a> &nbsp;&middot;&nbsp; <a href="{% url 'vendors:signup' %}">List your pop-up or event (free)</a>
       {% if INSTAGRAM_HANDLE %}&nbsp;&middot;&nbsp; <a href="https://instagram.com/{{ INSTAGRAM_HANDLE }}" rel="noopener" target="_blank">Instagram</a>{% endif %}
     </div>
   </div>

@@ -6,21 +6,21 @@
 <div class="profile-head">
   <div class="avatar">{{ vendor.initials }}</div>
   <div class="grow">
-    <h1>{{ vendor.name }} {% if vendor.verified %}<span class="pill verified">Verified</span>{% endif %}</h1>
-    <p class="muted" style="margin:0 0 6px">{% if vendor.verified %}Your pop-ups go live instantly.{% else %}Your first pop-ups are reviewed before going live, usually within a day.{% endif %}</p>
-    <div class="links"><a href="{% url 'vendors:profile' vendor.slug %}">Public page</a><a href="{% url 'vendors:edit_profile' %}">Edit profile</a></div>
+    <h1>{{ vendor.name }} {% if vendor.is_organiser %}<span class="pill lilac">Organiser</span>{% endif %} {% if vendor.verified %}<span class="pill verified">Verified</span>{% endif %}</h1>
+    <p class="muted" style="margin:0 0 6px">{% if vendor.verified %}New pop-ups from verified accounts go live instantly. Edits are re-checked first.{% else %}Your account and pop-ups are reviewed before going live, usually within a day.{% endif %}</p>
+    <div class="links"><a href="{% url 'vendors:profile' vendor.slug %}">Public page</a><a href="{% url 'vendors:edit_profile' %}">Edit profile</a>{% if vendor.role != "organiser" %}<a href="{% url 'events:vendor_calls' %}">Events looking for vendors</a>{% endif %}</div>
   </div>
-  <a class="btn" href="{% url 'events:create' %}">+ Post a pop-up</a>
+  <a class="btn" href="{% url 'events:create' %}">+ Post {% if vendor.role == "organiser" %}an event{% else %}a pop-up{% endif %}</a>
 </div>
 
-<h2>Your pop-ups</h2>
+<h2>Your {% if vendor.role == "organiser" %}events{% else %}pop-ups{% endif %}</h2>
 {% for event in events %}
 <article class="item has-thumb">
   <a class="thumb" href="{{ event.get_absolute_url }}"><img src="{{ event.cover_image.url }}" alt="" loading="lazy"></a>
   <div>
     <span class="pill {{ event.status }}">{{ event.get_status_display }}</span>
     <h3 style="margin-top:6px">{{ event.title }}</h3>
-    <div class="meta"><span>{{ event|when_range }}</span><span>{{ event.area.name }}</span>{% if event.is_published %}<span>{{ event.interested_count }} interested</span>{% endif %}</div>
+    <div class="meta"><span>{{ event|when_range }}</span><span>{{ event.area.name }}</span>{% if event.vendor_call_open %}<span>Vendor call open</span>{% endif %}{% if event.is_published %}<span>{{ event.interested_count }} interested</span>{% endif %}</div>
     {% if event.status == "pending" %}<div class="notice">Waiting for review. We'll email you when it's live.</div>{% endif %}
     {% if event.status == "rejected" %}<div class="notice bad">{{ event.review_note|default:"This pop-up wasn't approved." }} Edit it and it'll be reviewed again.</div>{% endif %}
     <div class="row-actions">
@@ -31,6 +31,6 @@
   </div>
 </article>
 {% empty %}
-<div class="empty"><p>You haven't posted anything yet.</p><a class="btn" href="{% url 'events:create' %}">Post your first pop-up</a></div>
+<div class="empty"><p>You haven't posted anything yet.</p><a class="btn" href="{% url 'events:create' %}">Post your first {% if vendor.role == "organiser" %}event{% else %}pop-up{% endif %}</a></div>
 {% endfor %}
 {% endblock %}

@@ -1,0 +1,14 @@
+<section class="vcall" id="vendor-call">
+  <h2>Vendors wanted</h2>
+  <ul class="facts">
+    <li><strong>Booth</strong>{{ event.booth_price_display }}</li>
+    {% if event.vendor_slots %}<li><strong>Booths</strong>{{ event.vendor_slots }} available</li>{% endif %}
+    {% if event.apply_by %}<li><strong>Apply by</strong>{{ event.apply_by|date:"l j F" }}</li>{% endif %}
+  </ul>
+  {% if event.vendor_info %}<p class="desc">{{ event.vendor_info }}</p>{% endif %}
+  <div class="actions">
+    {% if event.apply_link %}<a class="btn" href="{{ event.apply_link }}" rel="noopener nofollow ugc" target="_blank">Apply for a booth</a>{% endif %}
+    {% for c in event.vendor.contact_links %}<a class="btn {% if event.apply_link %}ghost{% endif %}" href="{{ c.url }}" rel="noopener{% if c.external %} nofollow{% endif %}" target="_blank">{% if forloop.first and not event.apply_link %}Ask about a booth on {% endif %}{{ c.label }}</a>{% endfor %}
+  </div>
+  <p class="notice">PopUp Plug doesn't take or handle booth payments. Before you pay anyone, check the organiser's past events and confirm who the account belongs to.</p>
+</section>

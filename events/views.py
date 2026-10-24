@@ -9,6 +9,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from core.changes import form_changes, merge_changes
 from core.decorators import flag_invalid, login_required
 from core.notifications import notify_event_pending
 from social import services as social_services
@@ -26,6 +27,14 @@ PAGE_SIZE = 12
 # ---------------------------------------------------------------------------
 def published():
     return Event.objects.filter(status=Event.Status.PUBLISHED).select_related("vendor", "area", "category", "giveaway")
+
+
+def open_calls():
+    """Published events whose organiser is still taking vendor applications."""
+    now, today = timezone.now(), timezone.localdate()
+    return published().filter(
+        seeking_vendors=True, vendor_call_closed=False, end_at__gte=now,
+    ).filter(Q(apply_by__isnull=True) | Q(apply_by__gte=today))
 
 
 def weekend_window(now=None):
@@ -54,7 +63,7 @@ def home(request):
     return render(request, "events/home.html", {
         "this_weekend": this_weekend,
         "upcoming": upcoming,
-        "categories": Category.objects.all(),
+        "categories": Category.objects.filter(is_general=False),
         "areas": Area.objects.filter(city__is_active=True),
     })
 
@@ -84,7 +93,7 @@ def event_list(request):
         qs = qs.filter(area__slug=area)
     category = request.GET.get("category", "")
     if category:
-        qs = qs.filter(category__slug=category)
+        qs = qs.filter(Q(category__slug=category) | Q(category__is_general=True))
     if request.GET.get("free") == "1":
         qs = qs.filter(is_free_entry=True)
 
@@ -99,7 +108,61 @@ def event_list(request):
         "page": page,
         "when": when, "area": area, "category": category, "q": q,
         "free": request.GET.get("free") == "1",
-        "categories": Category.objects.all(),
+        "categories": Category.objects.filter(is_general=False),
+        "areas": Area.objects.filter(city__is_active=True),
+        "querystring": params.urlencode(),
+    })
+
+
+BOOTH_BUDGETS = [(0, "Free booths only"), (5000, "Up to ₦5,000"), (10000, "Up to ₦10,000"), (20000, "Up to ₦20,000"),
+                 (50000, "Up to ₦50,000"), (100000, "Up to ₦100,000")]
+
+
+@cache_public
+def vendor_calls(request):
+    """Events that are looking for vendors, filterable by area, category, start date and booth budget."""
+    now = timezone.now()
+    qs = open_calls()
+
+    area = request.GET.get("area", "")
+    if area:
+        qs = qs.filter(area__slug=area)
+    category = request.GET.get("category", "")
+    if category:
+        qs = qs.filter(Q(category__slug=category) | Q(category__is_general=True))
+    when = request.GET.get("when", "any")
+    if when == "week":
+        qs = qs.filter(start_at__lte=now + timedelta(days=7))
+    elif when == "month":
+        qs = qs.filter(start_at__lte=now + timedelta(days=30))
+    else:
+        when = "any"
+
+    budget = None
+    try:
+        raw = int(request.GET.get("budget", ""))
+        if raw in dict(BOOTH_BUDGETS):
+            budget = raw
+    except ValueError:
+        pass
+    include_ask = request.GET.get("ask") == "1"
+    hidden_ask = 0
+    if budget is not None:
+        priced = Q(booth_price_on_request=False, booth_price__isnull=False, booth_price__lte=budget)
+        if include_ask:
+            qs = qs.filter(priced | Q(booth_price_on_request=True))
+        else:
+            hidden_ask = qs.filter(booth_price_on_request=True).count()
+            qs = qs.filter(priced)
+
+    page = Paginator(qs, PAGE_SIZE).get_page(request.GET.get("page"))
+    params = request.GET.copy()
+    params.pop("page", None)
+    return render(request, "events/vendor_calls.html", {
+        "page": page, "area": area, "category": category, "when": when,
+        "budget": "" if budget is None else str(budget), "include_ask": include_ask, "hidden_ask": hidden_ask,
+        "budgets": BOOTH_BUDGETS, "filtered": bool(params),
+        "categories": Category.objects.filter(is_general=False),
         "areas": Area.objects.filter(city__is_active=True),
         "querystring": params.urlencode(),
     })
@@ -184,6 +247,7 @@ def event_create(request):
         event.vendor = vendor
         event.status = Event.Status.PUBLISHED if vendor.verified else Event.Status.PENDING
         event.save()
+        form.save_m2m()
         if event.is_published:
             social_services.queue_event_post(event)
             messages.success(request, "Your pop-up is live!")
@@ -204,13 +268,33 @@ def event_edit(request, slug):
 
     form = EventForm(request.POST or None, request.FILES or None, instance=event, vendor=vendor)
     if request.method == "POST" and form.is_valid():
+        if not form.has_changed():
+            messages.info(request, "No changes to save.")
+            return redirect("vendors:dashboard")
+        changes = form_changes(form)
+        was_live = event.status == Event.Status.PUBLISHED
+        # Closing or reopening applications only narrows or restores what was already approved.
+        only_toggle = was_live and set(form.changed_data) <= {"vendor_call_closed"}
         event = form.save(commit=False)
-        if not vendor.verified:
-            event.status = Event.Status.PENDING  # edits by unverified vendors are re-reviewed
+        if only_toggle:
+            event.save()
+            messages.success(request, "Applications closed." if event.vendor_call_closed else "Applications reopened.")
+            return redirect("vendors:dashboard")
+        # Every other edit, even by a verified vendor, takes the event off the site until staff re-approve it.
+        event.status = Event.Status.PENDING
+        if was_live or event.pending_changes:
+            event.pending_changes = merge_changes(event.pending_changes, changes)
         event.save()
-        if not vendor.verified:
-            notify_event_pending(event, edited=True)
-        messages.success(request, "Event updated.")
+        form.save_m2m()
+        notify_event_pending(event, edited=True)
+        messages.success(request, "Event updated. It's hidden until we re-approve the changes, usually within a day.")
+        return redirect("vendors:dashboard")
+        event = form.save(commit=False)
+        # Every real edit, even by a verified vendor, takes the event off the site until staff re-approve it.
+        event.status = Event.Status.PENDING
+        event.save()
+        notify_event_pending(event, edited=True)
+        messages.success(request, "Event updated. It's hidden until we re-approve the changes, usually within a day.")
         return redirect("vendors:dashboard")
     flag_invalid(request, form)
     return render(request, "events/event_form.html", {"form": form, "editing": True, "event": event})

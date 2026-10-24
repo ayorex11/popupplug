@@ -3,7 +3,9 @@ from django.contrib.auth import login
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
+from core.changes import form_changes, merge_changes
 from core.decorators import flag_invalid, login_required
+from core.notifications import notify_vendor_profile_edited
 from events.models import Event
 
 from .forms import VendorProfileForm, VendorSignupForm
@@ -17,7 +19,8 @@ def signup(request):
     if request.method == "POST" and form.is_valid():
         user = form.save()
         login(request, user)
-        messages.success(request, "Welcome! Your vendor account is ready. Post your first pop-up.")
+        messages.success(request, "Welcome! Your account is ready. Post your first event." if user.vendor.is_organiser
+                         else "Welcome! Your vendor account is ready. Post your first pop-up.")
         return redirect("vendors:dashboard")
     flag_invalid(request, form)
     return render(request, "vendors/signup.html", {"form": form})
@@ -38,8 +41,22 @@ def edit_profile(request):
     vendor = get_object_or_404(Vendor, user=request.user)
     form = VendorProfileForm(request.POST or None, instance=vendor)
     if request.method == "POST" and form.is_valid():
-        form.save()
-        messages.success(request, "Profile updated.")
+        if not form.has_changed():
+            messages.info(request, "No changes to save.")
+            return redirect("vendors:dashboard")
+        was_verified = vendor.verified
+        changes = form_changes(form)
+        vendor = form.save(commit=False)
+        if was_verified:
+            vendor.verified = False  # profile changes have to be re-approved
+        if was_verified or vendor.pending_changes:
+            vendor.pending_changes = merge_changes(vendor.pending_changes, changes)
+        vendor.save()
+        if was_verified:
+            notify_vendor_profile_edited(vendor)
+            messages.success(request, "Profile updated. It's back in review and your Verified badge returns once we re-approve it, usually within a day. Your live events stay up.")
+        else:
+            messages.success(request, "Profile updated.")
         return redirect("vendors:dashboard")
     flag_invalid(request, form)
     return render(request, "vendors/profile_form.html", {"form": form})

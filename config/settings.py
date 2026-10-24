@@ -239,6 +239,7 @@ elif EMAIL_HOST:
     EMAIL_TIMEOUT = 10
 else:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+PASSWORD_RESET_TIMEOUT = 3 * 60 * 60  # reset links last 3 hours
 DEFAULT_FROM_EMAIL = getenv("DEFAULT_FROM_EMAIL", f"{SITE_NAME} <no-reply@popupplug.com.ng>")
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 

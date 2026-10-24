@@ -12,7 +12,7 @@ from django.utils import timezone
 
 # Pages that must never appear in search: staff tools, auth, vendor-only screens, POST endpoints.
 PRIVATE_PATHS = re.compile(
-    r"^/(desk|admin|login|logout)(/|$)"
+    r"^/(desk|admin|login|logout|password-reset|reset)(/|$)"
     r"|^/vendors/(dashboard|profile/edit)/"
     r"|^/events/new/"
     r"|^/e/[^/]+/(edit|delete|interested)/"
@@ -69,6 +69,7 @@ def sitemap_xml(request):
     entries = [
         _url(absolute(reverse("events:home")), changefreq="daily", priority="1.0"),
         _url(absolute(reverse("events:list")), changefreq="daily", priority="0.9"),
+        _url(absolute(reverse("events:vendor_calls")), changefreq="daily", priority="0.8"),
         _url(absolute(reverse("vendors:signup")), changefreq="monthly", priority="0.7"),
     ]
     # Published events: upcoming plus anything from the last 60 days. Older ones add little.

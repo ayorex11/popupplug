@@ -46,3 +46,17 @@ class SocialPost(models.Model):
 
     def __str__(self):
         return f"{self.get_kind_display()} post #{self.pk} ({self.status})"
+
+    @property
+    def tiktok_draft(self):
+        from . import cards
+        if self.kind == self.Kind.EVENT and self.event:
+            return cards.tiktok_event_caption(self.event)
+        return cards.tiktok_welcome_caption(self.vendor) if self.vendor else ""
+
+    @property
+    def x_draft(self):
+        from . import cards
+        if self.kind == self.Kind.EVENT and self.event:
+            return cards.x_event_post(self.event)
+        return cards.x_welcome_post(self.vendor) if self.vendor else ""
